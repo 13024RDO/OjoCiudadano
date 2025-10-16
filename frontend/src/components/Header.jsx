@@ -1,8 +1,6 @@
-// src/components/Header.jsx
-import React from 'react';
 import iconSrc from '../assets/ojo.png'; // 👈 Importa la imagen
 
-const Header = () => {
+export default function Header (){
   return (
     <header className="bg-black text-white p-4 shadow-md">
       <div className="flex items-center space-x-3">
@@ -21,5 +19,3 @@ const Header = () => {
     </header>
   );
 };
-
-export default Header;
