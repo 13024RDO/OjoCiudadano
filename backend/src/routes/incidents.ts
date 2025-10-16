@@ -17,7 +17,7 @@ const tiposConFoto: string[] = [
 ];
 
 router.post("/", async (req: Request, res: Response) => {
-  const files = req.files as { photo?: UploadedFile } | undefined;
+  //const files = req.files as { photo?: UploadedFile } | undefined;
 
   try {
     const { type, description } = req.body;
@@ -38,17 +38,17 @@ router.post("/", async (req: Request, res: Response) => {
         .json({ error: "Ubicación fuera de Formosa Capital" });
     }
 
-    let photoUrl: string | null = null;
-    if (files?.photo && tiposConFoto.includes(type)) {
-      photoUrl = await uploadImage(files.photo.data);
-    }
+    //let photoUrl: string | null = null;
+    //if (files?.photo && tiposConFoto.includes(type)) {
+    //  photoUrl = await uploadImage(files.photo.data);
+    //}
 
     const incident = new Incident({
       type,
       description,
       location: { coordinates: [lng, lat] },
       barrio,
-      photoUrl,
+      //photoUrl,
     });
 
     await incident.save();
@@ -62,7 +62,7 @@ router.post("/", async (req: Request, res: Response) => {
           description: incident.description,
           location: incident.location.coordinates,
           barrio: incident.barrio,
-          photoUrl: incident.photoUrl,
+          //photoUrl: incident.photoUrl,
           timestamp: incident.timestamp,
         },
       };
