@@ -8,9 +8,14 @@ export const GraficoTorta = () => {
     const obtenerDatos = async () => {
       try {
         // cambiar la url a la que va venit del backend
-        const respuesta = await fetch("http://localhost:4500/api/estadisticas");
+        const respuesta = await fetch("http://localhost:5000/api/stats/summary");
         const data = await respuesta.json();
-        setDatos(data); 
+        const datosTransformados = data.incidents_by_type.map((item) => ({
+          categoria: item._id,
+          cantidad: item.count,
+        }));
+
+        setDatos(datosTransformados);
       } catch (error) {
         console.error("Error al obtener los datos:", error);
       }
@@ -36,7 +41,7 @@ export const GraficoTorta = () => {
           label
         >
           {datos.map((entry, index) => (
-            <Cell key={`cell-index`} fill={colores[index % colores.length]} />
+           <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
           ))}
         </Pie>
         <Tooltip />

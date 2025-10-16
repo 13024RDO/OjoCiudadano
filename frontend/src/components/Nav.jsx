@@ -3,23 +3,26 @@ import React from 'react';
 import { MdLocationOn,MdReport } from "react-icons/md";
 import { ImStatsBars } from "react-icons/im";
 import { GoAlertFill } from "react-icons/go";
+import { useSecciones } from '../../context/SeccionContext';
 
-const Seccion = ({texto, icono:Icono})=>{
+const Seccion = ({texto, icono:Icono, id})=>{
+  const {handleClickHook} = useSecciones()
+
     return(
-        <div className='flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 font-medium text-gray-300 hover:bg-gray-800 hover:text-white '>
+        <button onClick={()=>handleClickHook(id)} className='flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 font-medium text-gray-300 hover:bg-gray-800 hover:text-white '>
             <Icono className="" />
             <span>{texto}</span>
-        </div>
+        </button>
     )
 }
 
 export default function Nav (){
   return (
     <nav className="bg-black p-3 justify-center flex shadow-sm space-x-4 flex-wrap ">
-      <Seccion texto="Mapa" icono={MdLocationOn} />
-      <Seccion texto="Reportar" icono={MdReport} />
-      <Seccion texto="Estadísticas" icono={ImStatsBars } />
-      <Seccion texto="Alertas" icono={GoAlertFill} />
+      <Seccion texto="Mapa" id={"mapa"} icono={MdLocationOn} />
+      <Seccion texto="Reportar" id={"reportar"} icono={MdReport} />
+      <Seccion texto="Estadísticas" id={"estadistica"} icono={ImStatsBars } />
+      <Seccion texto="Alertas" id={"alertas"} icono={GoAlertFill} />
     </nav>
   );
 };
