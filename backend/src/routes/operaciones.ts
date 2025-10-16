@@ -35,7 +35,7 @@ router.get("/comisarias-con-moviles", async (req: Request, res: Response) => {
     // Agrupar móviles por comisaría
     const comisariasConMoviles = comisarias.map((comi) => {
       const movilesDeComisaria = moviles.filter(
-        (m) => m.comisariaId === comi._id.toString()
+        (m) => m.comisariaId.toString() === comi._id.toString()
       );
       return {
         ...comi.toObject(),

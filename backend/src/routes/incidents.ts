@@ -69,6 +69,33 @@ router.post("/", async (req: Request, res: Response) => {
 
     const incident = new Incident(incidentData);
     await incident.save();
+    // Emitir actualización de mapa de calor
+    if ((global as any).wss) {
+      const statsBarrios = await Incident.aggregate([
+        {
+          $match: {
+            timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+          },
+        },
+        { $group: { _id: "$barrio", count: { $sum: 1 } } },
+      ]);
+
+      const barriosCalor: Record<string, number> = {};
+      statsBarrios.forEach((item) => {
+        barriosCalor[item._id] = item.count;
+      });
+
+      (global as any).wss.clients.forEach((client: any) => {
+        if (client.readyState === client.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "barrios_calor_update",
+              payload: barriosCalor,
+            })
+          );
+        }
+      });
+    }
 
     // Emitir por WebSocket
     if ((global as any).wss) {

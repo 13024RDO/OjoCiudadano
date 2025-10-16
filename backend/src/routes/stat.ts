@@ -41,6 +41,31 @@ router.get("/summary", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error en estadísticas" });
   }
 });
+// GET: Estadísticas de incidentes por barrio (para mapa de calor)
+// GET: Estadísticas de incidentes por barrio (para mapa de calor)
+router.get("/barrios-calor", async (req: Request, res: Response) => {
+  try {
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const stats = await Incident.aggregate([
+      { $match: { timestamp: { $gte: last24h } } },
+      { $group: { _id: "$barrio", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
+    // Formato: { "Liborsi": 5, "San Miguel": 3, ... }
+    const barriosCalor: Record<string, number> = {};
+    stats.forEach((item) => {
+      barriosCalor[item._id] = item.count;
+    });
+
+    res.json(barriosCalor);
+  } catch (error) {
+    console.error("Error en /barrios-calor:", error);
+    res.status(500).json({ error: "Error al obtener datos" });
+  }
+});
 
 router.get("/admin", requireAdmin, async (req: Request, res: Response) => {
   try {
