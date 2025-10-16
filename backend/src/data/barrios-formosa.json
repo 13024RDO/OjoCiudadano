@@ -1,0 +1,22 @@
+[
+  {
+    "nombre": "San Miguel",
+    "centro": { "lng": -58.1781, "lat": -26.1841 }
+  },
+  {
+    "nombre": "Barrio Obrero",
+    "centro": { "lng": -58.1722, "lat": -26.1792 }
+  },
+  {
+    "nombre": "17 de Octubre",
+    "centro": { "lng": -58.1856, "lat": -26.1901 }
+  },
+  {
+    "nombre": "Lomas del Sur",
+    "centro": { "lng": -58.1912, "lat": -26.1987 }
+  },
+  {
+    "nombre": "Villa del Carmen",
+    "centro": { "lng": -58.1654, "lat": -26.1723 }
+  }
+]
