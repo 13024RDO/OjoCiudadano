@@ -1,0 +1,23 @@
+[
+  {
+    "id": "movil_01",
+    "patente": "FOR 123",
+    "comisariaId": "comi_1",
+    "estado": "disponible",
+    "ubicacionActual": { "lng": -58.1775, "lat": -26.184 }
+  },
+  {
+    "id": "movil_02",
+    "patente": "FOR 456",
+    "comisariaId": "comi_2",
+    "estado": "disponible",
+    "ubicacionActual": { "lng": -58.172, "lat": -26.179 }
+  },
+  {
+    "id": "movil_03",
+    "patente": "FOR 789",
+    "comisariaId": "comi_3",
+    "estado": "disponible",
+    "ubicacionActual": { "lng": -58.1785, "lat": -26.1845 }
+  }
+]
