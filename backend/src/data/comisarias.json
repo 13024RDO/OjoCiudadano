@@ -1,0 +1,23 @@
+[
+  {
+    "id": "comi_1",
+    "nombre": "Comisaría 1ª - Centro",
+    "direccion": "Calle San Martín 500",
+    "location": { "lng": -58.1775, "lat": -26.184 },
+    "telefono": "3704-123456"
+  },
+  {
+    "id": "comi_2",
+    "nombre": "Comisaría 2ª - Barrio Obrero",
+    "direccion": "Av. 25 de Mayo 800",
+    "location": { "lng": -58.172, "lat": -26.179 },
+    "telefono": "3704-234567"
+  },
+  {
+    "id": "comi_3",
+    "nombre": "Comisaría 3ª - San Miguel",
+    "direccion": "Calle Belgrano 300",
+    "location": { "lng": -58.1785, "lat": -26.1845 },
+    "telefono": "3704-345678"
+  }
+]

@@ -20,9 +20,14 @@ router.post("/", async (req: Request, res: Response) => {
   const files = req.files as { photo?: UploadedFile } | undefined;
 
   try {
-    const { type, description, lng, lat } = req.body;
+    const { type, description } = req.body;
+    let { lng, lat } = req.body;
 
-    if (typeof lng !== "number" || typeof lat !== "number") {
+    // Parsear coordenadas (form-data las envía como strings)
+    lng = parseFloat(lng);
+    lat = parseFloat(lat);
+
+    if (isNaN(lng) || isNaN(lat)) {
       return res.status(400).json({ error: "Ubicación inválida" });
     }
 
