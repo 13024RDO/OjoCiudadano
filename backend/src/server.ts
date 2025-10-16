@@ -5,7 +5,7 @@ import http from "http";
 import fileUpload from "express-fileupload";
 import { connectDB } from "./config/db";
 import incidentRoutes from "./routes/incidents";
-import statsRoutes from "./routes/stats";
+import statsRoutes from "./routes/stat";
 import { setupWebSocket } from "./sockets/websocket";
 
 const app = express();
