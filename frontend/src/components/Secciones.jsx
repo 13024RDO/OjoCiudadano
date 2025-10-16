@@ -1,7 +1,9 @@
 import { useSecciones } from "../../context/SeccionContext"
-import { GraficoTorta } from "./Estadisticas"
+
 import MapaIncidentes from "./Mapa"
 import Reportes from "./Reportes"
+import AlertSystem from "./Alertas"
+import DashboardSeguridad from "./Estadisticas"
 
 export default function SeccionesNav(){
     const {abiertoid } = useSecciones()
@@ -11,13 +13,21 @@ export default function SeccionesNav(){
                 <Reportes/>
             }   
 
-             {abiertoid === "estadistica" &&
-               <GraficoTorta/> 
-            } 
+        
 
             {abiertoid === "mapa" &&
                <MapaIncidentes/> 
             }   
+            
+            
+            {abiertoid === "alertas" &&
+               <AlertSystem/> 
+            } 
+
+            
+            {abiertoid === "estadistica" &&
+               <DashboardSeguridad/> 
+            } 
                   
         </div>
     )
