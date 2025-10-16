@@ -11,7 +11,7 @@ const Seccion = ({texto, icono:Icono})=>{
     )
 }
 
-const Nav = () => {
+export default function Nav (){
   return (
     <nav className="bg-black p-3 justify-center flex shadow-sm space-x-4 flex-wrap ">
       <Seccion texto="Mapa" icono={MdLocationOn} />
@@ -22,7 +22,6 @@ const Nav = () => {
   );
 };
  
-export default Nav;
 
 
  {/* <ul className="flex space-x-2 justify-center flex-wrap">
