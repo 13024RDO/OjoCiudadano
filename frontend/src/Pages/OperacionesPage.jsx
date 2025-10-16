@@ -1,23 +1,28 @@
+// src/pages/OperacionesPage.js
 import React, { useState, useEffect } from "react";
-import MovilCard from "../components/MovilCard";
+import ComisariaCard from "../components/ComisariaCard";
 import IncidenteCard from "../components/IncidenteCard";
+import MapaOperaciones from "../components/MapaOperaciones";
 import { connectWebSocket, closeWebSocket } from "../utils/websocket";
 
 export default function OperacionesPage() {
-  const [moviles, setMoviles] = useState([]);
+  const [comisariasConMoviles, setComisariasConMoviles] = useState([]);
   const [incidentesRecientes, setIncidentesRecientes] = useState([]);
 
-  // Cargar datos iniciales
+  // Extraer listas planas para el mapa
+  const comisariasPlanas = comisariasConMoviles.map((c) => c);
+  const movilesPlanos = comisariasConMoviles.flatMap((c) => c.moviles || []);
+
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const [movRes, incRes] = await Promise.all([
-          fetch("http://localhost:5000/api/operaciones/moviles"),
+        const [comisariasRes, incRes] = await Promise.all([
+          fetch("http://localhost:5000/api/operaciones/comisarias-con-moviles"),
           fetch("http://localhost:5000/api/incidents?admin=true"),
         ]);
-        const movilesData = await movRes.json();
+        const comisariasData = await comisariasRes.json();
         const incidentesData = await incRes.json();
-        setMoviles(movilesData);
+        setComisariasConMoviles(comisariasData);
         setIncidentesRecientes(incidentesData);
       } catch (err) {
         console.error("Error al cargar datos:", err);
@@ -26,14 +31,15 @@ export default function OperacionesPage() {
     cargarDatos();
   }, []);
 
-  // Conectar WebSocket
   useEffect(() => {
     const manejarMensaje = (msg) => {
       if (msg.type === "new_incident") {
         setIncidentesRecientes((prev) => [msg.payload, ...prev.slice(0, 19)]);
       }
       if (msg.type === "moviles_update") {
-        setMoviles(msg.payload);
+        fetch("http://localhost:5000/api/operaciones/comisarias-con-moviles")
+          .then((res) => res.json())
+          .then((data) => setComisariasConMoviles(data));
       }
     };
 
@@ -42,44 +48,62 @@ export default function OperacionesPage() {
   }, []);
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Centro de Operaciones - Policía de Formosa</h1>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-blue-800">
+          🚨 Centro de Operaciones - Policía de Formosa
+        </h1>
+      </header>
 
-      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
-        {/* Panel de móviles */}
-        <div
-          style={{
-            flex: 1,
-            backgroundColor: "#f0f0f0",
-            padding: "16px",
-            borderRadius: "8px",
-          }}
-        >
-          <h2>Estado de Patrullas</h2>
-          {moviles.length > 0 ? (
-            moviles.map((movil) => <MovilCard key={movil.id} movil={movil} />)
-          ) : (
-            <p>Cargando...</p>
-          )}
+      {/* Mapa */}
+      <section className="mb-6">
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            🗺️ Mapa de Operaciones
+          </h2>
+          <MapaOperaciones
+            incidentes={incidentesRecientes}
+            comisarias={comisariasPlanas}
+            moviles={movilesPlanos}
+          />
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Panel de comisarías */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              🏢 Comisarías y Patrullas
+            </h2>
+            {comisariasConMoviles.length > 0 ? (
+              comisariasConMoviles.map((comi) => (
+                <ComisariaCard
+                  key={comi._id}
+                  comi={comi}
+                  moviles={comi.moviles || []}
+                />
+              ))
+            ) : (
+              <p className="text-gray-500">Cargando...</p>
+            )}
+          </div>
         </div>
 
         {/* Panel de incidentes */}
-        <div
-          style={{
-            flex: 2,
-            backgroundColor: "#fff0f0",
-            padding: "16px",
-            borderRadius: "8px",
-          }}
-        >
-          <h2>Incidentes Recientes</h2>
-          {incidentesRecientes.length > 0 ? (
-            incidentesRecientes.map((inc) => (
-              <IncidenteCard key={inc.id || inc._id} incidente={inc} />
-            ))
-          ) : (
-            <p>Sin incidentes recientes</p>
-          )}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              🚨 Incidentes Recientes
+            </h2>
+            {incidentesRecientes.length > 0 ? (
+              incidentesRecientes.map((inc) => (
+                <IncidenteCard key={inc.id || inc._id} incidente={inc} />
+              ))
+            ) : (
+              <p className="text-gray-500">No hay incidentes recientes</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
