@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet"; // 👈 importante
-import "leaflet/dist/leaflet.css";
 
 // 🔹 Ícono personalizado (usarás el clásico de Leaflet)
 const iconMarker = L.icon({
@@ -58,10 +57,10 @@ export default function Reportes() {
   };
 
   return (
-    <form onSubmit={subirForm} className="flex flex-col gap-4 p-4">
-      <div>
+    <form onSubmit={subirForm} className="flex w-full h-[500px] flex-col gap-4 p-4">
+      <div className="flex flex-col gap-2">
         <label>Tipo de incidente:</label>
-        <select value={type} onChange={(e) => setType(e.target.value)}>
+        <select className="[&>option]:text-black w-[50%] py-1 px-4 border-2 rounded border-white " value={type} onChange={(e) => setType(e.target.value)}>
           <option value="">Seleccionar tipo</option>
           <option value="robo_moto">Robo de moto</option>
           <option value="robo_bici">Robo de bici</option>
@@ -76,17 +75,19 @@ export default function Reportes() {
         </select>
       </div>
 
-      <div>
+      <div className="flex flex-col gap-2">
         <label>Descripción (opcional):</label>
         <input
+        className= "border-2 py-1 px-4 border-white rounded"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
 
-      <div>
-        <label>Selecciona el punto en el mapa:</label>
+{/* mapa */}
+      <div className="flex flex-col gap2">
+        <label>Selecciona ubicacion del incidente:</label>
         <MapContainer
           center={[-26.185, -58.173]}
           zoom={13}
@@ -99,9 +100,6 @@ export default function Reportes() {
           <MapaSelector setLat={setLat} setLng={setLng} />
           {lat && lng && <Marker position={[lat, lng]} icon={iconMarker} />}
         </MapContainer>
-        <p>
-          Latitud: {lat?.toFixed(5)} | Longitud: {lng?.toFixed(5)}
-        </p>
       </div>
 
       {/* <div>
