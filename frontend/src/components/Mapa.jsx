@@ -49,8 +49,8 @@ const CapaCalor = ({ datos }) => {
 
     const coordenadasBarrios = {
       "San Miguel": [-26.177, -58.178],
-      "17 de Octubre": [-26.185, -58.165],
-      "Eva Perón": [-26.185, -58.200],
+      "17 de Octubre": [-26.18825, -58.19990],
+      "Eva Perón": [-26.13448, -58.15816],
       "Villa del Carmen": [-26.180, -58.220],
     };
 
