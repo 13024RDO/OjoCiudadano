@@ -1,5 +1,6 @@
 import { useSecciones } from "../../context/SeccionContext"
 import { GraficoTorta } from "./Estadisticas"
+import MapaIncidentes from "./Mapa"
 import Reportes from "./Reportes"
 
 export default function SeccionesNav(){
@@ -12,6 +13,10 @@ export default function SeccionesNav(){
 
              {abiertoid === "estadistica" &&
                <GraficoTorta/> 
+            } 
+
+            {abiertoid === "mapa" &&
+               <MapaIncidentes/> 
             }   
                   
         </div>
