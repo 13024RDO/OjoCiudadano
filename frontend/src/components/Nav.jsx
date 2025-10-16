@@ -1,6 +1,8 @@
 // src/components/Nav.jsx
 import React from 'react';
-import { MdLocationOn } from "react-icons/md";
+import { MdLocationOn,MdReport } from "react-icons/md";
+import { ImStatsBars } from "react-icons/im";
+import { GoAlertFill } from "react-icons/go";
 
 const Seccion = ({texto, icono:Icono})=>{
     return(
@@ -15,9 +17,9 @@ export default function Nav (){
   return (
     <nav className="bg-black p-3 justify-center flex shadow-sm space-x-4 flex-wrap ">
       <Seccion texto="Mapa" icono={MdLocationOn} />
-      <Seccion texto="Reportar" icono={MdLocationOn} />
-      <Seccion texto="Estadísticas" icono={MdLocationOn} />
-      <Seccion texto="Alertas" icono={MdLocationOn} />
+      <Seccion texto="Reportar" icono={MdReport} />
+      <Seccion texto="Estadísticas" icono={ImStatsBars } />
+      <Seccion texto="Alertas" icono={GoAlertFill} />
     </nav>
   );
 };
