@@ -13,14 +13,10 @@ function DashboardSeguridad() {
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
-        // Asegúrate de que esta URL coincida con tu backend
-        const respuesta = await fetch(
-          "http://localhost:3000/api/stats/summary"
-        );
+        const respuesta = await fetch("http://localhost:3000/api/stats/summary");
         if (!respuesta.ok) throw new Error("Error en la respuesta");
         const data = await respuesta.json();
 
-        // Transformar datos para el gráfico de torta
         const datosTransformados = data.incidents_by_type.map((item) => ({
           categoria: item._id || "Sin tipo",
           cantidad: item.count,
@@ -41,161 +37,54 @@ function DashboardSeguridad() {
     obtenerDatos();
   }, []);
 
-  // Paleta de colores
   const colores = ["#60A5FA", "#F87171", "#34D399", "#FBBF24", "#A78BFA"];
 
-  const cardStyle = {
-    backgroundColor: "#1a1a1a",
-    border: "1px solid #333",
-    borderRadius: "8px",
-    padding: "16px",
-    boxShadow: "0 0 6px rgba(0,0,0,0.2)",
-    flex: "1",
-    minWidth: "200px",
-  };
-
   return (
-    <div
-      style={{
-        backgroundColor: "#000",
-        color: "#ffffff",
-        minHeight: "100vh",
-        padding: "20px",
-        fontFamily: "Segoe UI, Roboto, Arial, sans-serif",
-        boxSizing: "border-box",
-      }}
-    >
+    <div className="bg-black text-white w-full  p-5 font-[Poppins] box-border">
       {/* Encabezado */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ fontSize: "1.8rem", fontWeight: "bold" }}>
-          Panel de Seguridad Ciudadana
-        </h1>
-        <div
-          style={{
-            fontSize: "0.85rem",
-            color: "#bbbbbb",
-          }}
-        >
-          Últimas 24 horas
-        </div>
+      <div className="flex justify-between items-center mb-5">
+        <h1 className="text-2xl font-bold">Panel de Seguridad Ciudadana</h1>
+        <div className="text-sm text-gray-400">Últimas 24 horas</div>
       </div>
 
       {/* Tarjetas de Resumen */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "16px",
-          marginBottom: "20px",
-        }}
-      >
-        <div style={cardStyle}>
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#bbbbbb",
-              marginBottom: "8px",
-            }}
-          >
-            Total de Incidentes (24h)
-          </div>
-          <div
-            style={{ fontSize: "2rem", fontWeight: "bold", color: "#ffffff" }}
-          >
-            {stats.total_last_24h}
-          </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4 mb-5">
+        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+          <div className="text-sm text-gray-400 mb-2">Total de Incidentes (24h)</div>
+          <div className="text-4xl font-bold text-white">{stats.total_last_24h}</div>
         </div>
 
-        <div style={cardStyle}>
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#bbbbbb",
-              marginBottom: "8px",
-            }}
-          >
-            Barrio con Más Incidentes
-          </div>
-          <div
-            style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#FBBF24" }}
-          >
-            {stats.top_barrio}
-          </div>
+        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+          <div className="text-sm text-gray-400 mb-2">Barrio con Más Incidentes</div>
+          <div className="text-2xl font-bold text-yellow-400">{stats.top_barrio}</div>
         </div>
 
-        <div style={cardStyle}>
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#bbbbbb",
-              marginBottom: "8px",
-            }}
-          >
-            Tipos de Incidentes
-          </div>
-          <div
-            style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#60A5FA" }}
-          >
-            {stats.incidents_by_type.length}
-          </div>
+        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+          <div className="text-sm text-gray-400 mb-2">Tipos de Incidentes</div>
+          <div className="text-2xl font-bold text-blue-400">{stats.incidents_by_type.length}</div>
         </div>
 
-        <div style={cardStyle}>
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#bbbbbb",
-              marginBottom: "8px",
-            }}
-          >
-            Barrios Reportados
-          </div>
-          <div
-            style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#34D399" }}
-          >
-            {stats.incidents_by_barrio.length}
-          </div>
+        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+          <div className="text-sm text-gray-400 mb-2">Barrios Reportados</div>
+          <div className="text-2xl font-bold text-green-400">{stats.incidents_by_barrio.length}</div>
         </div>
       </div>
 
-      {/* Gráfico de Torta: Incidentes por Tipo */}
-      <div
-        style={{
-          ...cardStyle,
-          padding: "20px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <div style={{ textAlign: "center", width: "100%" }}>
-          <h3
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              marginBottom: "12px",
-            }}
-          >
+      <div className="bg-[#1a1a1a] border justify-center border-[#333] rounded-lg p-5 shadow-md flex flex-wrap gap-10">
+      {/* grafico torta */}
+        <div className=" px-10">
+          <h3 className="text-lg font-bold pl-10">
             Distribución por Tipo de Incidente (Últimas 24h)
           </h3>
           {datos.length > 0 ? (
-            <PieChart width={400} height={300}>
+            <PieChart width={500} height={300}>
               <Pie
                 data={datos}
                 dataKey="cantidad"
                 nameKey="categoria"
-                cx="50%"
+                cx="40%"  
                 cy="50%"
                 outerRadius={100}
-                label={({ name, value }) => `${name}: ${value}`}
               >
                 {datos.map((entry, index) => (
                   <Cell
@@ -206,63 +95,43 @@ function DashboardSeguridad() {
                   />
                 ))}
               </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
+
+                {/* Tooltip opcional */}
+                <Tooltip />
+
+                {/* Leyenda al costado derecho */}
+                <Legend
+                  layout="vertical"
+                  verticalAlign="middle"
+                  align="right"
+                  spacing={20}
+                />
+              </PieChart>
           ) : (
-            <p style={{ color: "#888" }}>No hay datos disponibles</p>
+            <p className="text-gray-500">No hay datos disponibles</p>
           )}
         </div>
-      </div>
-
-      {/* Lista de Barrios (Top 5) */}
-      <div style={cardStyle}>
-        <h3
-          style={{
-            fontSize: "1.1rem",
-            fontWeight: "bold",
-            marginBottom: "12px",
-          }}
-        >
+      {/* top barrios */}
+        <div className="flex flex-col pr-10 pl-20 flex-1 shadow-md border-gray-300 md:border-l-2">
+        <h3 className="text-lg font-bold mb-10">
           Top Barrios con Más Incidentes (24h)
         </h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="flex flex-col gap-2 overflow-auto h-64">
           {stats.incidents_by_barrio.slice(0, 5).map((item, index) => (
             <div
               key={index}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "8px 0",
-                borderBottom: "1px solid #333",
-              }}
+              className="flex justify-between py-2 border-b border-[#333]"
             >
               <span>{item._id || "Desconocido"}</span>
-              <span style={{ color: "#FBBF24", fontWeight: "bold" }}>
-                {item.count}
-              </span>
+              <span className="text-yellow-400 font-bold">{item.count}</span>
             </div>
           ))}
           {stats.incidents_by_barrio.length === 0 && (
-            <p style={{ color: "#888", textAlign: "center" }}>
-              Sin datos de barrios
-            </p>
+            <p className="text-gray-500 text-center">Sin datos de barrios</p>
           )}
         </div>
       </div>
 
-      {/* Footer */}
-      <div
-        style={{
-          textAlign: "center",
-          fontSize: "0.75rem",
-          color: "#666666",
-          paddingTop: "20px",
-          borderTop: "1px solid #333333",
-          marginTop: "20px",
-        }}
-      >
-        Plataforma de Seguridad Ciudadana – Datos actualizados en tiempo real
       </div>
     </div>
   );

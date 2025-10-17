@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
-
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #000;
-  color: #ffffff;
+/* Ocultar scrolls */
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome, Safari y Opera */
 }
 
-#root {
-  min-height: 100vh;
-  background-color: #000;
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE y Edge */
+  scrollbar-width: none;     /* Firefox */
 }
+
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;     
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;            
+}
+

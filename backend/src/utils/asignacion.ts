@@ -1,7 +1,4 @@
 import Comisaria from "../models/Comisaria";
-import Movil from "../models/Movil";
-import { IMovil } from "../types/modelos";
-import { IComisaria } from "../types/modelos";
 
 function haversineDistance(
   coord1: { lat: number; lng: number },
@@ -19,14 +16,11 @@ function haversineDistance(
   return R * c;
 }
 
-export async function asignarComisariaYMovil(lng: number, lat: number) {
+// ✅ Solo asigna comisaría, sin móviles
+export async function asignarComisaria(lng: number, lat: number) {
   try {
     const comisarias = await Comisaria.find();
-
-    if (comisarias.length === 0) {
-      console.warn("⚠️ No hay comisarías en la base de datos");
-      return { comisaria: null, movil: null };
-    }
+    if (comisarias.length === 0) return null;
 
     let comisariaCercana = comisarias[0];
     let minDist = haversineDistance(
@@ -52,37 +46,9 @@ export async function asignarComisariaYMovil(lng: number, lat: number) {
       }
     }
 
-    const movilDisponible = await Movil.findOne({
-      comisariaId: comisariaCercana._id,
-      estado: "disponible",
-    });
-
-    let movilAsignado: IMovil | null = null;
-    if (movilDisponible) {
-      movilDisponible.estado = "en_camino";
-      movilAsignado = await movilDisponible.save();
-
-      if ((global as any).wss) {
-        const allMoviles = await Movil.find().select("-__v");
-        (global as any).wss.clients.forEach((client: any) => {
-          if (client.readyState === client.OPEN) {
-            client.send(
-              JSON.stringify({
-                type: "moviles_update",
-                payload: allMoviles,
-              })
-            );
-          }
-        });
-      }
-    }
-
-    return {
-      comisaria: comisariaCercana,
-      movil: movilAsignado,
-    };
+    return comisariaCercana;
   } catch (error) {
-    console.error("❌ Error en asignación:", error);
-    return { comisaria: null, movil: null };
+    console.error("Error al asignar comisaría:", error);
+    return null;
   }
 }

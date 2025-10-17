@@ -6,7 +6,8 @@ import L from "leaflet";
 // Ícono personalizado para evitar errores
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
@@ -92,7 +93,7 @@ export default function MapaYAlertas() {
       };
       ws.onerror = () => {
         ws.close();
-      }
+      };
     };
 
     connect();
@@ -134,8 +135,8 @@ export default function MapaYAlertas() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 p-4">
+      <div className="max-w-7xl ">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -211,7 +212,9 @@ export default function MapaYAlertas() {
                         incident.location.coordinates[1],
                         incident.location.coordinates[0],
                       ]}
-                      icon={getIconByPriority(getPriorityInfo(incident.priority).text)}
+                      icon={getIconByPriority(
+                        getPriorityInfo(incident.priority).text
+                      )}
                     >
                       <Popup>
                         <b>{(incident.type || "").replace(/_/g, " ")}</b>
@@ -308,29 +311,25 @@ export default function MapaYAlertas() {
                             />
                           </svg>
                           <span>
-                            {new Date(incident.timestamp).toLocaleString("es-ES")}
+                            {new Date(incident.timestamp).toLocaleString(
+                              "es-ES"
+                            )}
                           </span>
                         </div>
-                        <div className="text-sm text-slate-500">Barrio: {incident.barrio}</div>
+                        <div className="text-sm text-slate-500">
+                          Barrio: {incident.barrio}
+                        </div>
                       </div>
                       <div className="flex gap-2 mt-4 pt-4 border-t border-slate-700/50">
-                        <button
-                          className={`px-3 py-1.5 rounded text-sm font-medium ${
-                            incident.status === "pendiente"
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                          }`}
-                          onClick={() => updateIncidentStatus(incident.id, "pendiente")}
-                        >
-                          Pendiente
-                        </button>
                         <button
                           className={`px-3 py-1.5 rounded text-sm font-medium ${
                             incident.status === "solucionado"
                               ? "bg-green-600 text-white"
                               : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                           }`}
-                          onClick={() => updateIncidentStatus(incident.id, "solucionado")}
+                          onClick={() =>
+                            updateIncidentStatus(incident.id, "solucionado")
+                          }
                         >
                           Solucionado
                         </button>

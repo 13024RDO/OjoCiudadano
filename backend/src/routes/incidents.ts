@@ -4,23 +4,40 @@ import { getBarrioFromCoords } from "../utils/geoutils";
 import { uploadImage } from "../utils/cloudinary";
 import { requireAdmin } from "../middleware/role";
 import { UploadedFile } from "express-fileupload";
+<<<<<<< HEAD
+import { asignarComisaria } from "../utils/asignacion"; // ← solo comisaría
+=======
 import { asignarComisariaYMovil } from "../utils/asignacion";
-import axios from 'axios'; // --- NUEVO ---
+import axios from 'axios'; 
 
 const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/triaje-incidente";
+>>>>>>> 119a3dd7c4b2ebc30f39038886a7bd8db9df48f8
 
 const router = Router();
 
 
 
+// ✅ Prioridades por tipo
+const prioridades: Record<string, number> = {
+  robo_moto: 3,
+  robo_bici: 3,
+  robo_vehiculo: 3,
+  sospechoso: 2,
+  riña: 2,
+  abandono_vehiculo: 2,
+  daño_luminaria: 1,
+  basura_acumulada: 1,
+  ruido_molestia: 1,
+  otros: 1,
+};
+
 router.post("/", async (req: Request, res: Response) => {
-  const files = req.files as { photo?: UploadedFile } | undefined;
+  //const files = req.files as { photo?: UploadedFile } | undefined;
 
   try {
     const { type, description } = req.body;
     let { lng, lat } = req.body;
 
-    // Parsear coordenadas (form-data las envía como strings)
     lng = parseFloat(lng);
     lat = parseFloat(lat);
 
@@ -28,35 +45,55 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Ubicación inválida" });
     }
 
-    // ✅ Asignación automática de comisaría y móvil
-    const { comisaria, movil } = await asignarComisariaYMovil(lng, lat);
+    const barrio = getBarrioFromCoords(lng, lat) || "Desconocido";
+    const priority = prioridades[type] || 1;
 
 
-    // ✅ Construir el objeto de incidente SIN campos nulos innecesarios
+    // ✅ Datos base del incidente
     const incidentData: any = {
       type,
       description: description || undefined,
       location: { coordinates: [lng, lat] },
+<<<<<<< HEAD
+      barrio,
+      photoUrl: photoUrl || undefined,
+      priority, // ← prioridad numérica
+      status: "pendiente", // ← estado inicial
+=======
       barrio: getBarrioFromCoords(lng, lat) || "Desconocido",
+>>>>>>> 119a3dd7c4b2ebc30f39038886a7bd8db9df48f8
     };
 
-    // Solo agregar comisariaAsignada si existe
+    // ✅ Asignar solo comisaría (sin móviles)
+    let comisaria = null;
+    try {
+      comisaria = await asignarComisaria(lng, lat);
+    } catch (err) {
+      console.warn("⚠️ Error al asignar comisaría:", err);
+    }
+
     if (comisaria?.nombre) {
       incidentData.comisariaAsignada = comisaria.nombre;
     }
 
-    // Solo agregar movilAsignado si existe
-    if (movil) {
-      incidentData.movilAsignado = {
-        id: movil._id.toString(),
-        patente: movil.patente,
-        estado: movil.estado,
-      };
-    }
-
     const incident = new Incident(incidentData);
     await incident.save();
-    // Emitir actualización de mapa de calor
+
+    // ✅ Emitir por WebSocket
+    if ((global as any).wss) {
+      (global as any).wss.clients.forEach((client: any) => {
+        if (client.readyState === client.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "new_incident",
+              payload: incident.toObject(),
+            })
+          );
+        }
+      });
+    }
+
+    // ✅ Emitir actualización de mapa de calor
     if ((global as any).wss) {
       const statsBarrios = await Incident.aggregate([
         {
@@ -84,6 +121,8 @@ router.post("/", async (req: Request, res: Response) => {
       });
     }
 
+<<<<<<< HEAD
+=======
     // Emitir por WebSocket
     if ((global as any).wss) {
       (global as any).wss.clients.forEach((client: any) => {
@@ -108,6 +147,7 @@ router.post("/", async (req: Request, res: Response) => {
           console.error('🔴 Error al contactar el webhook de n8n:', error.message);
       });
 
+>>>>>>> 119a3dd7c4b2ebc30f39038886a7bd8db9df48f8
     return res.status(201).json({ success: true, id: incident._id.toString() });
   } catch (error) {
     console.error("Error al crear incidente:", error);

@@ -4,14 +4,12 @@ const incidentSchema = new Schema({
   type: {
     type: String,
     enum: [
-      "robo_moto",
-      "robo_bici",
-      "robo_vehiculo",
+      "robo",
       "abandono_vehiculo",
-      "daño_luminaria",
+      "vandalismo",
       "basura_acumulada",
-      "sospechoso",
-      "riña",
+      "actividad_sospechosa",
+      "pelea",
       "ruido_molestia",
       "otros",
     ],

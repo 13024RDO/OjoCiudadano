@@ -75,5 +75,5 @@ const CapaCalor = ({ datos }) => {
     };
   }, [datos, map]);
 
-  return null; // 👈 No renderiza nada visual
+  return null;
 };
