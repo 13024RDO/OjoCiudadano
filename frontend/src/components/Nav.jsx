@@ -35,6 +35,11 @@ export default function Nav() {
           icono={GoAlertFill}
         />
       ) : null}
+      <Seccion
+        texto="Asignacion de Comisarias"
+        id={"asignacion"}
+        icono={MdReport}
+      />
     </nav>
   );
 }

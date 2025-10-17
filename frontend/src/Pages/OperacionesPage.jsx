@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Ícono personalizado para evitar errores
+// Ícono personalizado
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -12,7 +12,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Ícono por prioridad
 const getIconByPriority = (priority) => {
   const icons = {
     Urgente:
@@ -31,20 +30,27 @@ const getIconByPriority = (priority) => {
   });
 };
 
-// Función para traducir prioridad
 const getPriorityInfo = (priority) => {
   const p = String(priority);
-  if (p === "3" || p === "Urgente")
-    return { text: "Urgente", class: "Urgente" };
-  if (p === "2" || p === "Medio") return { text: "Medio", class: "Medio" };
-  if (p === "1" || p === "Bajo") return { text: "Bajo", class: "Bajo" };
+  if (p === "3") return { text: "Urgente", class: "Urgente" };
+  if (p === "2") return { text: "Medio", class: "Medio" };
+  if (p === "1") return { text: "Bajo", class: "Bajo" };
   return { text: "Analizando...", class: "Analizando" };
 };
 
 export default function MapaYAlertas() {
-  const [incidents, setIncidents] = useState({});
+  const [incidents, setIncidents] = useState(() => {
+    const saved = localStorage.getItem("incidents");
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [connectionStatus, setConnectionStatus] = useState("Desconectado");
   const wsRef = useRef(null);
+
+  // Guardar en localStorage al cambiar incidents
+  useEffect(() => {
+    localStorage.setItem("incidents", JSON.stringify(incidents));
+  }, [incidents]);
 
   // Conectar WebSocket
   useEffect(() => {
@@ -55,38 +61,57 @@ export default function MapaYAlertas() {
       ws.onopen = () => setConnectionStatus("Conectado");
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+
         if (data.type === "new_incident") {
-          setIncidents((prev) => ({
-            ...prev,
-            [data.payload.id]: data.payload,
-          }));
+          const incident = data.payload;
+          const id = incident._id || incident.id;
+          const normalizedIncident = {
+            ...incident,
+            id,
+            status: incident.status || "pendiente",
+          };
+          setIncidents((prev) => ({ ...prev, [id]: normalizedIncident }));
         }
+
         if (data.type === "incident_priority_updated") {
           const { id, priority } = data.payload;
-          setIncidents((prev) => ({
-            ...prev,
-            [id]: { ...prev[id], priority },
-          }));
+          setIncidents((prev) => {
+            if (!prev[id]) return prev;
+            return { ...prev, [id]: { ...prev[id], priority } };
+          });
         }
+
         if (data.type === "incident_status_updated") {
           const { id, status } = data.payload;
-          setIncidents((prev) => ({
-            ...prev,
-            [id]: { ...prev[id], status },
-          }));
+          setIncidents((prev) => {
+            if (!prev[id]) return prev;
+            const updated = { ...prev[id], status };
+            // Si se marca como solucionado, eliminar después de 1 segundo
+            if (status === "solucionado") {
+              setTimeout(() => {
+                setIncidents((curr) => {
+                  const copy = { ...curr };
+                  delete copy[id];
+                  return copy;
+                });
+              }, 1000);
+            }
+            return { ...prev, [id]: updated };
+          });
         }
       };
+
       ws.onclose = () => {
         setConnectionStatus("Desconectado");
         setTimeout(connect, 3000);
       };
+      ws.onerror = () => ws.close();
     };
 
     connect();
     return () => wsRef.current?.close();
   }, []);
 
-  // Enviar actualización de estado
   const updateIncidentStatus = (id, status) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(
@@ -98,7 +123,6 @@ export default function MapaYAlertas() {
     }
   };
 
-  // Calcular estadísticas
   const incidentsArray = Object.values(incidents);
   const stats = {
     total: incidentsArray.length,
@@ -113,12 +137,12 @@ export default function MapaYAlertas() {
     ).length,
   };
 
-  // Ordenar incidentes
+  // Ordenar por prioridad numérica (3 > 2 > 1)
   const sortedIncidents = [...incidentsArray].sort((a, b) => {
-    const order = { Urgente: 1, Medio: 2, Bajo: 3, "Analizando...": 4 };
-    const prioA = order[getPriorityInfo(a.priority).text] || 99;
-    const prioB = order[getPriorityInfo(b.priority).text] || 99;
-    return prioA - prioB || new Date(b.timestamp) - new Date(a.timestamp);
+    const prioA = Number(a.priority) || 0;
+    const prioB = Number(b.priority) || 0;
+    if (prioA !== prioB) return prioB - prioA;
+    return new Date(b.timestamp) - new Date(a.timestamp);
   });
 
   return (
@@ -190,28 +214,37 @@ export default function MapaYAlertas() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {sortedIncidents.map((incident) => (
-                  <Marker
-                    key={incident.id}
-                    position={[
-                      incident.location.coordinates[1],
-                      incident.location.coordinates[0],
-                    ]}
-                    icon={getIconByPriority(
-                      getPriorityInfo(incident.priority).text
-                    )}
-                  >
-                    <Popup>
-                      <b>{incident.type.replace(/_/g, " ")}</b>
-                      <br />
-                      {incident.description || "Sin descripción"}
-                      <br />
-                      Barrio: {incident.barrio}
-                      <br />
-                      Prioridad: {getPriorityInfo(incident.priority).text}
-                    </Popup>
-                  </Marker>
-                ))}
+                {sortedIncidents
+                  .filter((incident) => incident?.location?.coordinates)
+                  .map((incident) => (
+                    <Marker
+                      key={
+                        incident.id ||
+                        `${incident.location.coordinates[0]}-${incident.location.coordinates[1]}`
+                      }
+                      position={[
+                        incident.location.coordinates[1],
+                        incident.location.coordinates[0],
+                      ]}
+                      icon={getIconByPriority(
+                        getPriorityInfo(incident.priority).text
+                      )}
+                    >
+                      <Popup>
+                        <b>{(incident.type || "").replace(/_/g, " ")}</b>
+                        <br />
+                        {incident.description || "Sin descripción"}
+                        <br />
+                        Barrio: {incident.barrio}
+                        <br />
+                        {incident.comisariaAsignada && (
+                          <>👮 {incident.comisariaAsignada}</>
+                        )}
+                        <br />
+                        Prioridad: {getPriorityInfo(incident.priority).text}
+                      </Popup>
+                    </Marker>
+                  ))}
               </MapContainer>
             </div>
           </div>
@@ -244,15 +277,15 @@ export default function MapaYAlertas() {
                   const solved = incident.status === "solucionado";
                   return (
                     <div
-                      key={incident.id}
+                      key={incident.id || incident.timestamp}
                       className={`rounded-lg p-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 transition-all hover:shadow-lg ${
                         solved ? "opacity-60" : ""
                       } border-l-4 ${
-                        priorityInfo.class === "Urgente"
+                        incident.priority == 3
                           ? "border-red-500"
-                          : priorityInfo.class === "Medio"
+                          : incident.priority == 2
                           ? "border-amber-500"
-                          : priorityInfo.class === "Bajo"
+                          : incident.priority == 1
                           ? "border-green-500"
                           : "border-gray-500"
                       }`}
@@ -273,11 +306,16 @@ export default function MapaYAlertas() {
                             {priorityInfo.text}
                           </span>
                           <h3 className="text-xl font-semibold text-white capitalize mt-2 mb-2">
-                            {incident.type.replace(/_/g, " ")}
+                            {(incident.type || "").replace(/_/g, " ")}
                           </h3>
                           <p className="text-slate-300">
                             {incident.description || "Sin descripción"}
                           </p>
+                          {incident.comisariaAsignada && (
+                            <p className="text-sm text-blue-300 mt-2">
+                              👮 {incident.comisariaAsignada}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between pt-4 border-t border-slate-700/50">
@@ -343,7 +381,6 @@ export default function MapaYAlertas() {
   );
 }
 
-// Componente reutilizable para estadísticas
 function StatCard({ title, value, color, icon }) {
   const colorClasses = {
     blue: "text-blue-400",

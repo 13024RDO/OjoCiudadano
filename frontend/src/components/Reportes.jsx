@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import L from "leaflet"; // 👈 importante
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// 🔹 Ícono personalizado (usarás el clásico de Leaflet)
 const iconMarker = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
@@ -24,9 +23,9 @@ function MapaSelector({ setLat, setLng }) {
 export default function Reportes() {
   const [type, setType] = useState("");
   const [description, setDescription] = useState("");
-  //   const [photoUrl, setPhoto] = useState(null);
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(""); // 👈 nuevo estado
 
   const subirForm = async (e) => {
     e.preventDefault();
@@ -41,7 +40,6 @@ export default function Reportes() {
     formData.append("description", description);
     formData.append("lat", lat);
     formData.append("lng", lng);
-    // if(photoUrl) formData.append("photo", photoUrl);
 
     try {
       const res = await fetch("http://localhost:3000/api/incidents", {
@@ -52,13 +50,32 @@ export default function Reportes() {
       if (!res.ok) throw new Error("Error al enviar el formulario");
       const data = await res.json();
       console.log("Respuesta del servidor:", data);
+
+      // ✅ Mostrar mensaje de éxito
+      setSuccessMessage("Reportado con éxito");
+      // Opcional: limpiar el formulario
+      setType("");
+      setDescription("");
+      setLat(null);
+      setLng(null);
+
+      // Opcional: ocultar el mensaje después de 3 segundos
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error:", error);
+      alert("Hubo un problema al enviar el reporte. Inténtalo de nuevo.");
     }
   };
 
   return (
     <form onSubmit={subirForm} className="flex flex-col gap-4 p-4">
+      {/* Mostrar mensaje de éxito si existe */}
+      {successMessage && (
+        <div className="bg-green-100 w-[200px] absolute bottom-4 right-4  text-green-700 p-2 rounded text-center">
+          {successMessage}
+        </div>
+      )}
+
       <div>
         <label>Tipo de incidente:</label>
         <select value={type} onChange={(e) => setType(e.target.value)}>
@@ -103,11 +120,6 @@ export default function Reportes() {
           Latitud: {lat?.toFixed(5)} | Longitud: {lng?.toFixed(5)}
         </p>
       </div>
-
-      {/* <div>
-        <label>Foto (opcional):</label>
-        <input type="file" onChange={(e) => setPhoto(e.target.files[0])} />
-      </div> */}
 
       <button type="submit" className="bg-blue-500 text-white rounded p-2">
         Enviar reporte

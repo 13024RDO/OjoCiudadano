@@ -4,7 +4,7 @@ import { getBarrioFromCoords } from "../utils/geoutils";
 import { uploadImage } from "../utils/cloudinary";
 import { requireAdmin } from "../middleware/role";
 import { UploadedFile } from "express-fileupload";
-import { asignarComisariaYMovil } from "../utils/asignacion";
+import { asignarComisaria } from "../utils/asignacion"; // ← solo comisaría
 
 const router = Router();
 
@@ -17,6 +17,20 @@ const tiposConFoto: string[] = [
   "basura_acumulada",
 ];
 
+// ✅ Prioridades por tipo
+const prioridades: Record<string, number> = {
+  robo_moto: 3,
+  robo_bici: 3,
+  robo_vehiculo: 3,
+  sospechoso: 2,
+  riña: 2,
+  abandono_vehiculo: 2,
+  daño_luminaria: 1,
+  basura_acumulada: 1,
+  ruido_molestia: 1,
+  otros: 1,
+};
+
 router.post("/", async (req: Request, res: Response) => {
   const files = req.files as { photo?: UploadedFile } | undefined;
 
@@ -24,7 +38,6 @@ router.post("/", async (req: Request, res: Response) => {
     const { type, description } = req.body;
     let { lng, lat } = req.body;
 
-    // Parsear coordenadas (form-data las envía como strings)
     lng = parseFloat(lng);
     lat = parseFloat(lat);
 
@@ -32,8 +45,8 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Ubicación inválida" });
     }
 
-    // ✅ Asignación automática de comisaría y móvil
-    const { comisaria, movil } = await asignarComisariaYMovil(lng, lat);
+    const barrio = getBarrioFromCoords(lng, lat) || "Desconocido";
+    const priority = prioridades[type] || 1;
 
     let photoUrl: string | null = null;
     if (
@@ -44,32 +57,47 @@ router.post("/", async (req: Request, res: Response) => {
       photoUrl = await uploadImage(files.photo.data);
     }
 
-    // ✅ Construir el objeto de incidente SIN campos nulos innecesarios
+    // ✅ Datos base del incidente
     const incidentData: any = {
       type,
       description: description || undefined,
       location: { coordinates: [lng, lat] },
-      barrio: getBarrioFromCoords(lng, lat) || "Desconocido",
+      barrio,
       photoUrl: photoUrl || undefined,
+      priority, // ← prioridad numérica
+      status: "pendiente", // ← estado inicial
     };
 
-    // Solo agregar comisariaAsignada si existe
+    // ✅ Asignar solo comisaría (sin móviles)
+    let comisaria = null;
+    try {
+      comisaria = await asignarComisaria(lng, lat);
+    } catch (err) {
+      console.warn("⚠️ Error al asignar comisaría:", err);
+    }
+
     if (comisaria?.nombre) {
       incidentData.comisariaAsignada = comisaria.nombre;
     }
 
-    // Solo agregar movilAsignado si existe
-    if (movil) {
-      incidentData.movilAsignado = {
-        id: movil._id.toString(),
-        patente: movil.patente,
-        estado: movil.estado,
-      };
-    }
-
     const incident = new Incident(incidentData);
     await incident.save();
-    // Emitir actualización de mapa de calor
+
+    // ✅ Emitir por WebSocket
+    if ((global as any).wss) {
+      (global as any).wss.clients.forEach((client: any) => {
+        if (client.readyState === client.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "new_incident",
+              payload: incident.toObject(),
+            })
+          );
+        }
+      });
+    }
+
+    // ✅ Emitir actualización de mapa de calor
     if ((global as any).wss) {
       const statsBarrios = await Incident.aggregate([
         {
@@ -91,20 +119,6 @@ router.post("/", async (req: Request, res: Response) => {
             JSON.stringify({
               type: "barrios_calor_update",
               payload: barriosCalor,
-            })
-          );
-        }
-      });
-    }
-
-    // Emitir por WebSocket
-    if ((global as any).wss) {
-      (global as any).wss.clients.forEach((client: any) => {
-        if (client.readyState === client.OPEN) {
-          client.send(
-            JSON.stringify({
-              type: "new_incident",
-              payload: incident.toObject(),
             })
           );
         }

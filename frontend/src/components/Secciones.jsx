@@ -4,6 +4,7 @@ import MapaIncidentes from "./Mapa";
 import Reportes from "./Reportes";
 import DashboardSeguridad from "./Estadisticas";
 import OperacionesPage from "../Pages/OperacionesPage";
+import AsignacionComisarias from "./AsignacionComisarias";
 
 export default function SeccionesNav() {
   const { abiertoid } = useSecciones();
@@ -17,6 +18,7 @@ export default function SeccionesNav() {
       {abiertoid === "estadistica" && <DashboardSeguridad />}
 
       {abiertoid === "alertas" && <OperacionesPage />}
+      {abiertoid === "asignacion" && <AsignacionComisarias />}
     </div>
   );
 }
