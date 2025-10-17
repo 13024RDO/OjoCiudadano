@@ -18,5 +18,85 @@
   {
     "nombre": "Villa del Carmen",
     "centro": { "lng": -58.1654, "lat": -26.1723 }
+  },
+  {
+    "nombre": "Don Bosco",
+    "centro": { "lng": -58.1635, "lat": -26.1758 }
+  },
+  {
+    "nombre": "Independencia",
+    "centro": { "lng": -58.1821, "lat": -26.172 }
+  },
+  {
+    "nombre": "San Francisco",
+    "centro": { "lng": -58.1765, "lat": -26.1953 }
+  },
+  {
+    "nombre": "Virgen del Rosario",
+    "centro": { "lng": -58.1888, "lat": -26.1799 }
+  },
+  {
+    "nombre": "Mariano Moreno",
+    "centro": { "lng": -58.1945, "lat": -26.1834 }
+  },
+  {
+    "nombre": "La Floresta",
+    "centro": { "lng": -58.2041, "lat": -26.1811 }
+  },
+  {
+    "nombre": "El Pucú",
+    "centro": { "lng": -58.2166, "lat": -26.1948 }
+  },
+  {
+    "nombre": "San Agustín",
+    "centro": { "lng": -58.2089, "lat": -26.1891 }
+  },
+  {
+    "nombre": "Liborsi",
+    "centro": { "lng": -58.1993, "lat": -26.1745 }
+  },
+  {
+    "nombre": "Itatí I",
+    "centro": { "lng": -58.2065, "lat": -26.1688 }
+  },
+  {
+    "nombre": "Evita",
+    "centro": { "lng": -58.1802, "lat": -26.2025 }
+  },
+  {
+    "nombre": "Juan Domingo Perón",
+    "centro": { "lng": -58.2324, "lat": -26.1795 }
+  },
+  {
+    "nombre": "Guadalupe",
+    "centro": { "lng": -58.1611, "lat": -26.1831 }
+  },
+  {
+    "nombre": "2 de Abril",
+    "centro": { "lng": -58.2123, "lat": -26.1754 }
+  },
+  {
+    "nombre": "Fontana",
+    "centro": { "lng": -58.19, "lat": -26.168 }
+  },
+  {
+    "nombre": "Parque Urbano",
+    "centro": { "lng": -58.1875, "lat": -26.1599 }
+  },
+  {
+    "nombre": "Incone",
+    "centro": { "lng": -58.202, "lat": -26.1622 }
+  },
+  {
+    "nombre": "San José Obrero",
+    "centro": { "lng": -58.1691, "lat": -26.191 }
+  },
+  {
+    "nombre": "Fleming",
+    "centro": { "lng": -58.175, "lat": -26.1678 }
+  },
+  {
+    "nombre": "La Nueva Formosa",
+    "centro": { "lng": -58.2431, "lat": -26.2083 }
   }
 ]

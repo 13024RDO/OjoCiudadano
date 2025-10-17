@@ -2,7 +2,7 @@ import iconSrc from '../assets/ojo.png'; // 👈 Importa la imagen
 
 export default function Header (){
   return (
-    <header className="bg-black text-white p-4 shadow-md">
+    <header className="bg-red-400 items-center h-[60px] w-full text-white shadow-md">
       <div className="flex items-center space-x-3">
         <div className="bg-green-600 p-2 rounded-lg">
           <img

@@ -5,10 +5,10 @@ import SeccionesNav from "../components/Secciones";
 
 export default function Inicio(){
     return(
-        <div className="bg-black overflow-auto scrollbar-hide text-white grid grid-rows-[auto_auto_1fr] h-screen">
+        <div className="bg-black overflow-auto scrollbar-hide text-white h-screen">
             <Header />
             <Nav />
-            <div className="p-5">
+            <div className="">
                <SeccionesNav/>
             </div>
         </div>

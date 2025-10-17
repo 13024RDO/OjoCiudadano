@@ -43,11 +43,10 @@ export default function MapaColores() {
   };
 
   return (
-    <div className="w-full h-[600px] rounded-2xl overflow-hidden shadow-xl">
+    <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-xl">
       <MapContainer
         center={[-26.185, -58.183]}
         zoom={13}
-        style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'

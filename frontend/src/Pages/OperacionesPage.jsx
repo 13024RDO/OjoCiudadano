@@ -1,39 +1,31 @@
+// src/pages/OperacionesPage.js
 import React, { useState, useEffect } from "react";
-import MovilCard from "../components/MovilCard";
 import IncidenteCard from "../components/IncidenteCard";
+import MapaIncidentes from "../components/MapaIncidentes";
 import { connectWebSocket, closeWebSocket } from "../utils/websocket";
 
 export default function OperacionesPage() {
-  const [moviles, setMoviles] = useState([]);
   const [incidentesRecientes, setIncidentesRecientes] = useState([]);
 
-  // Cargar datos iniciales
   useEffect(() => {
-    const cargarDatos = async () => {
+    const cargarIncidentes = async () => {
       try {
-        const [movRes, incRes] = await Promise.all([
-          fetch("http://localhost:5000/api/operaciones/moviles"),
-          fetch("http://localhost:5000/api/incidents?admin=true"),
-        ]);
-        const movilesData = await movRes.json();
-        const incidentesData = await incRes.json();
-        setMoviles(movilesData);
-        setIncidentesRecientes(incidentesData);
+        const res = await fetch(
+          "http://localhost:5000/api/incidents?admin=true"
+        );
+        const data = await res.json();
+        setIncidentesRecientes(data);
       } catch (err) {
-        console.error("Error al cargar datos:", err);
+        console.error("Error al cargar incidentes:", err);
       }
     };
-    cargarDatos();
+    cargarIncidentes();
   }, []);
 
-  // Conectar WebSocket
   useEffect(() => {
     const manejarMensaje = (msg) => {
       if (msg.type === "new_incident") {
         setIncidentesRecientes((prev) => [msg.payload, ...prev.slice(0, 19)]);
-      }
-      if (msg.type === "moviles_update") {
-        setMoviles(msg.payload);
       }
     };
 
@@ -42,46 +34,38 @@ export default function OperacionesPage() {
   }, []);
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Centro de Operaciones - Policía de Formosa</h1>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-blue-800">
+          🚨 Centro de Operaciones - Policía de Formosa
+        </h1>
+      </header>
 
-      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
-        {/* Panel de móviles */}
-        <div
-          style={{
-            flex: 1,
-            backgroundColor: "#f0f0f0",
-            padding: "16px",
-            borderRadius: "8px",
-          }}
-        >
-          <h2>Estado de Patrullas</h2>
-          {moviles.length > 0 ? (
-            moviles.map((movil) => <MovilCard key={movil.id} movil={movil} />)
-          ) : (
-            <p>Cargando...</p>
-          )}
+      {/* Mapa de incidentes */}
+      <section className="mb-6">
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            🗺️ Mapa de Incidentes
+          </h2>
+          <MapaIncidentes incidentes={incidentesRecientes} />
         </div>
+      </section>
 
-        {/* Panel de incidentes */}
-        <div
-          style={{
-            flex: 2,
-            backgroundColor: "#fff0f0",
-            padding: "16px",
-            borderRadius: "8px",
-          }}
-        >
-          <h2>Incidentes Recientes</h2>
+      {/* Lista de incidentes */}
+      <section>
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            📋 Incidentes Recientes
+          </h2>
           {incidentesRecientes.length > 0 ? (
             incidentesRecientes.map((inc) => (
               <IncidenteCard key={inc.id || inc._id} incidente={inc} />
             ))
           ) : (
-            <p>Sin incidentes recientes</p>
+            <p className="text-gray-500">No hay incidentes recientes</p>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -1,12 +1,7 @@
-import { Comisaria, Movil } from "../types/operaciones";
-
-const comisarias: Comisaria[] = require("../data/comisarias.json");
-let moviles: Movil[] = require("../data/moviles.json");
-
-// Hacemos accesible globalmente para actualizaciones
-if (!(global as any).movilesEnTiempoReal) {
-  (global as any).movilesEnTiempoReal = moviles;
-}
+import Comisaria from "../models/Comisaria";
+import Movil from "../models/Movil";
+import { IMovil } from "../types/modelos";
+import { IComisaria } from "../types/modelos";
 
 function haversineDistance(
   coord1: { lat: number; lng: number },
@@ -24,41 +19,70 @@ function haversineDistance(
   return R * c;
 }
 
-export function asignarComisaria(lng: number, lat: number): Comisaria | null {
-  let closest: Comisaria | null = null;
-  let minDist = Infinity;
-  for (const comi of comisarias) {
-    const dist = haversineDistance({ lat, lng }, comi.location);
-    if (dist < minDist) {
-      minDist = dist;
-      closest = comi;
+export async function asignarComisariaYMovil(lng: number, lat: number) {
+  try {
+    const comisarias = await Comisaria.find();
+
+    if (comisarias.length === 0) {
+      console.warn("⚠️ No hay comisarías en la base de datos");
+      return { comisaria: null, movil: null };
     }
-  }
-  return closest;
-}
 
-export function asignarMovil(
-  comisariaId: string,
-  lng: number,
-  lat: number
-): Movil | null {
-  const movilesEnTiempoReal = (global as any).movilesEnTiempoReal as Movil[];
-  const movilesDisponibles = movilesEnTiempoReal.filter(
-    (m) => m.comisariaId === comisariaId && m.estado === "disponible"
-  );
+    let comisariaCercana = comisarias[0];
+    let minDist = haversineDistance(
+      { lat, lng },
+      {
+        lat: comisariaCercana.location.coordinates[1],
+        lng: comisariaCercana.location.coordinates[0],
+      }
+    );
 
-  if (movilesDisponibles.length === 0) return null;
-
-  let closest: Movil | null = null;
-  let minDist = Infinity;
-  for (const movil of movilesDisponibles) {
-    const dist = haversineDistance({ lat, lng }, movil.ubicacionActual);
-    if (dist < minDist) {
-      minDist = dist;
-      closest = movil;
+    for (let i = 1; i < comisarias.length; i++) {
+      const comi = comisarias[i];
+      const dist = haversineDistance(
+        { lat, lng },
+        {
+          lat: comi.location.coordinates[1],
+          lng: comi.location.coordinates[0],
+        }
+      );
+      if (dist < minDist) {
+        minDist = dist;
+        comisariaCercana = comi;
+      }
     }
-  }
-  return closest;
-}
 
-export { comisarias };
+    const movilDisponible = await Movil.findOne({
+      comisariaId: comisariaCercana._id,
+      estado: "disponible",
+    });
+
+    let movilAsignado: IMovil | null = null;
+    if (movilDisponible) {
+      movilDisponible.estado = "en_camino";
+      movilAsignado = await movilDisponible.save();
+
+      if ((global as any).wss) {
+        const allMoviles = await Movil.find().select("-__v");
+        (global as any).wss.clients.forEach((client: any) => {
+          if (client.readyState === client.OPEN) {
+            client.send(
+              JSON.stringify({
+                type: "moviles_update",
+                payload: allMoviles,
+              })
+            );
+          }
+        });
+      }
+    }
+
+    return {
+      comisaria: comisariaCercana,
+      movil: movilAsignado,
+    };
+  } catch (error) {
+    console.error("❌ Error en asignación:", error);
+    return { comisaria: null, movil: null };
+  }
+}

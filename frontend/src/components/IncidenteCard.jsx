@@ -1,3 +1,4 @@
+// src/components/IncidenteCard.js
 import React from "react";
 
 const TIPOS_LABEL = {
@@ -14,28 +15,26 @@ const TIPOS_LABEL = {
 };
 
 export default function IncidenteCard({ incidente }) {
+  const tipoLabel = TIPOS_LABEL[incidente.type] || incidente.type;
+
   return (
-    <div
-      style={{
-        borderLeft: "4px solid #d32f2f",
-        padding: "12px",
-        marginBottom: "12px",
-        backgroundColor: "#fff8f8",
-      }}
-    >
-      <h4>{TIPOS_LABEL[incidente.type] || incidente.type}</h4>
-      <p>📍 Barrio: {incidente.barrio}</p>
-      <p>🕒 {new Date(incidente.timestamp).toLocaleTimeString()}</p>
-
+    <div className="bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 border-red-500 hover:shadow-lg transition-shadow">
+      <h3 className="text-lg font-bold text-red-700 mb-1">{tipoLabel}</h3>
+      <p className="text-sm text-gray-600 mb-2">
+        <span className="font-semibold">📍 Barrio:</span> {incidente.barrio}
+      </p>
       {incidente.comisariaAsignada && (
-        <p>👮 Comisaría: {incidente.comisariaAsignada}</p>
-      )}
-
-      {incidente.movilAsignado && (
-        <p>
-          🚗 Móvil {incidente.movilAsignado.patente} -
-          {incidente.movilAsignado.estado}
+        <p className="text-sm text-blue-700">
+          <span className="font-semibold">👮 Comisaría asignada:</span>{" "}
+          {incidente.comisariaAsignada}
         </p>
+      )}
+      {incidente.photoUrl && (
+        <img
+          src={incidente.photoUrl}
+          alt="Foto del incidente"
+          className="mt-2 w-full h-24 object-cover rounded-md"
+        />
       )}
     </div>
   );

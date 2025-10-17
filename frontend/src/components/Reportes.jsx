@@ -57,19 +57,16 @@ export default function Reportes() {
   };
 
   return (
-    <form onSubmit={subirForm} className="flex w-full h-[500px] flex-col gap-4 p-4">
+    <form onSubmit={subirForm} className="flex w-[95%] sm:w-[75%] md:w-[65%] lg:w-[50%] xl:w-[35%] flex-col gap-4 p-4">
       <div className="flex flex-col gap-2">
         <label>Tipo de incidente:</label>
         <select className="[&>option]:text-black w-[50%] py-1 px-4 border-2 rounded border-white " value={type} onChange={(e) => setType(e.target.value)}>
           <option value="">Seleccionar tipo</option>
-          <option value="robo_moto">Robo de moto</option>
-          <option value="robo_bici">Robo de bici</option>
-          <option value="robo_vehiculo">Robo de vehículo</option>
-          <option value="abandono_vehiculo">Abandono de vehículo</option>
-          <option value="daño_luminaria">Daño de luminaria</option>
+          <option value="robo">Robo</option>
+          <option value="vandalismo">Vandalismo</option>
           <option value="basura_acumulada">Basura acumulada</option>
-          <option value="sospechoso">Sospechoso</option>
-          <option value="riña">Pelea</option>
+          <option value="actividad_sospechosa">Actividad sospechosa</option>
+          <option value="pelea">Pelea</option>
           <option value="ruido_molestia">Ruido molesto</option>
           <option value="otros">Otros</option>
         </select>
@@ -107,7 +104,7 @@ export default function Reportes() {
         <input type="file" onChange={(e) => setPhoto(e.target.files[0])} />
       </div> */}
 
-      <button type="submit" className="bg-blue-500 text-white rounded p-2">
+      <button type="submit" className="bg-[#00a63e] font-semibold text-white rounded p-2">
         Enviar reporte
       </button>
     </form>
