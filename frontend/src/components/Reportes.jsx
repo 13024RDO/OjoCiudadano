@@ -24,7 +24,7 @@ function MapaSelector({ setLat, setLng }) {
 export default function Reportes() {
   const [type, setType] = useState("");
   const [description, setDescription] = useState("");
-//   const [photoUrl, setPhoto] = useState(null);
+  //   const [photoUrl, setPhoto] = useState(null);
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
 
@@ -44,7 +44,7 @@ export default function Reportes() {
     // if(photoUrl) formData.append("photo", photoUrl);
 
     try {
-      const res = await fetch("http://localhost:5000/api/incidents", {
+      const res = await fetch("http://localhost:3000/api/incidents", {
         method: "POST",
         body: formData,
       });

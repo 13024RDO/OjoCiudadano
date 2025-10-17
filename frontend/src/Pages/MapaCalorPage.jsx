@@ -11,7 +11,7 @@ export default function MapaCalorPage() {
     const cargarDatos = async () => {
       try {
         const res = await fetch(
-          "http://localhost:5000/api/stats/barrios-calor"
+          "http://localhost:3000/api/stats/barrios-calor"
         );
         const data = await res.json();
         setDatosCalor(data);

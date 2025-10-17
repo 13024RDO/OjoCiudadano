@@ -10,7 +10,7 @@ export default function MapaIncidentes() {
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/stats/summary");
+        const res = await fetch("http://localhost:3000/api/stats/summary");
         const data = await res.json();
         setBarrios(data.incidents_by_barrio || []);
       } catch (error) {
@@ -49,9 +49,9 @@ const CapaCalor = ({ datos }) => {
 
     const coordenadasBarrios = {
       "San Miguel": [-26.177, -58.178],
-      "17 de Octubre": [-26.18825, -58.19990],
+      "17 de Octubre": [-26.18825, -58.1999],
       "Eva Perón": [-26.13448, -58.15816],
-      "Villa del Carmen": [-26.180, -58.220],
+      "Villa del Carmen": [-26.18, -58.22],
     };
 
     const puntos = datos

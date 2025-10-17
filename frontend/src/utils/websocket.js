@@ -1,7 +1,7 @@
 let ws = null;
 
 export const connectWebSocket = (onMessage) => {
-  ws = new WebSocket("ws://localhost:5000");
+  ws = new WebSocket("ws://localhost:3000");
   ws.onmessage = (event) => {
     const msg = JSON.parse(event.data);
     onMessage(msg);

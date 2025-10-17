@@ -28,9 +28,12 @@ export default function Nav() {
       <Seccion texto="Mapa" id={"mapa"} icono={MdLocationOn} />
       <Seccion texto="Reportar" id={"reportar"} icono={MdReport} />
       <Seccion texto="Estadísticas" id={"estadistica"} icono={ImStatsBars} />
-      <Seccion texto="Alertas" id={"alertas"} icono={GoAlertFill} />
       {user && user.rol === "admin" ? (
-        <Seccion texto="Operaciones" id={"operaciones"} icono={GoAlertFill} />
+        <Seccion
+          texto="Control de Alertas"
+          id={"alertas"}
+          icono={GoAlertFill}
+        />
       ) : null}
     </nav>
   );
