@@ -31,14 +31,6 @@ router.post("/", async (req: Request, res: Response) => {
     // ✅ Asignación automática de comisaría y móvil
     const { comisaria, movil } = await asignarComisariaYMovil(lng, lat);
 
-    let photoUrl: string | null = null;
-    if (
-      files?.photo?.data &&
-      files.photo.data.length > 0 &&
-      tiposConFoto.includes(type)
-    ) {
-      photoUrl = await uploadImage(files.photo.data);
-    }
 
     // ✅ Construir el objeto de incidente SIN campos nulos innecesarios
     const incidentData: any = {
@@ -46,7 +38,6 @@ router.post("/", async (req: Request, res: Response) => {
       description: description || undefined,
       location: { coordinates: [lng, lat] },
       barrio: getBarrioFromCoords(lng, lat) || "Desconocido",
-      photoUrl: photoUrl || undefined,
     };
 
     // Solo agregar comisariaAsignada si existe
