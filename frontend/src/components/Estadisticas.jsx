@@ -15,7 +15,7 @@ function DashboardSeguridad() {
       try {
         // Asegúrate de que esta URL coincida con tu backend
         const respuesta = await fetch(
-          "http://localhost:5000/api/stats/summary"
+          "http://localhost:3000/api/stats/summary"
         );
         if (!respuesta.ok) throw new Error("Error en la respuesta");
         const data = await respuesta.json();
