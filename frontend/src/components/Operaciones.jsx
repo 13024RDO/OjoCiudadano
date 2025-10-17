@@ -18,7 +18,8 @@ const getIconByPriority = (priorityText) => {
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
     Medio:
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png",
-    Bajo: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+    Bajo:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
     Analizando:
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gray.png",
   };
@@ -99,16 +100,13 @@ export default function MapaYAlertas() {
     return () => wsRef.current?.close();
   }, []);
 
-  // Enviar actualización de estado
-  const updateIncidentStatus = (id, status) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({
-          type: "update_status",
-          payload: { id, status },
-        })
-      );
-    }
+  // ✅ FUNCIÓN PARA ELIMINAR INCIDENTE DEL FRONTEND (sin tocar backend)
+  const removeIncident = (id) => {
+    setIncidents((prev) => {
+      const newState = { ...prev };
+      delete newState[id];
+      return newState;
+    });
   };
 
   // Calcular estadísticas
@@ -121,41 +119,29 @@ export default function MapaYAlertas() {
   };
 
   // Ordenar: 3 (Urgente) > 2 (Medio) > 1 (Bajo) > sin prioridad (Analizando)
-  // Dentro de cada grupo: más reciente primero
   const sortedIncidents = [...incidentsArray].sort((a, b) => {
-    const prioA = Number(a.priority) || 0; // 0 = sin prioridad → va al final
+    const prioA = Number(a.priority) || 0;
     const prioB = Number(b.priority) || 0;
-
-    if (prioA !== prioB) {
-      return prioB - prioA; // 3 > 2 > 1 > 0
-    }
-    // Si misma prioridad, ordenar por timestamp (más reciente primero)
+    if (prioA !== prioB) return prioB - prioA;
     return new Date(b.timestamp) - new Date(a.timestamp);
   });
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 p-4">
-      <div className="max-w-7xl ">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-white">
-              Centro de Control de Alertas
-            </h1>
+            <h1 className="text-3xl font-bold text-white">Centro de Control de Alertas</h1>
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700">
               <div
-                className={`w-2 h-2 rounded-full ${
-                  connectionStatus === "Conectado"
-                    ? "bg-green-500"
-                    : "bg-red-500"
-                } animate-pulse`}
+                className={`w-2 h-2 rounded-full ${connectionStatus === "Conectado" ? "bg-green-500" : "bg-red-500"
+                  } animate-pulse`}
               />
               <span className="text-sm text-slate-300">{connectionStatus}</span>
             </div>
           </div>
-          <p className="text-slate-400">
-            Monitoreo en tiempo real de incidentes del sistema
-          </p>
+          <p className="text-slate-400">Monitoreo en tiempo real de incidentes del sistema</p>
         </div>
 
         {/* Stats */}
@@ -253,36 +239,31 @@ export default function MapaYAlertas() {
               <div className="space-y-4">
                 {sortedIncidents.map((incident) => {
                   const priorityInfo = getPriorityInfo(incident.priority);
-                  const solved = incident.status === "solucionado";
                   return (
                     <div
                       key={incident.id}
-                      className={`rounded-lg p-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 transition-all hover:shadow-lg ${
-                        solved ? "opacity-60" : ""
-                      } border-l-4 ${
-                        Number(incident.priority) === 3
+                      className={`rounded-lg p-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 transition-all hover:shadow-lg border-l-4 ${Number(incident.priority) === 3
                           ? "border-red-500"
                           : Number(incident.priority) === 2
-                          ? "border-amber-500"
-                          : Number(incident.priority) === 1
-                          ? "border-green-500"
-                          : "border-gray-500"
-                      }`}
+                            ? "border-amber-500"
+                            : Number(incident.priority) === 1
+                              ? "border-green-500"
+                              : "border-gray-500"
+                        }`}
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                              priorityInfo.text === "Urgente"
+                            className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${priorityInfo.text === "Urgente"
                                 ? "bg-red-900/30 text-red-400 border border-red-900/50"
                                 : priorityInfo.text === "Medio"
-                                ? "bg-amber-900/30 text-amber-400 border border-amber-900/50"
-                                : priorityInfo.text === "Bajo"
-                                ? "bg-green-900/30 text-green-400 border border-green-900/50"
-                                : "bg-gray-900/30 text-gray-400 border border-gray-900/50"
-                            }`}
+                                  ? "bg-amber-900/30 text-amber-400 border border-amber-900/50"
+                                  : priorityInfo.text === "Bajo"
+                                    ? "bg-green-900/30 text-green-400 border border-green-900/50"
+                                    : "bg-gray-900/30 text-gray-400 border border-gray-900/50"
+                              }`}
                           >
-                            {priorityInfo.text}
+                            Prioridad: {priorityInfo.text}
                           </span>
                           <h3 className="text-xl font-semibold text-white capitalize mt-2 mb-2">
                             {(incident.type || "").replace(/_/g, " ")}
@@ -307,30 +288,14 @@ export default function MapaYAlertas() {
                               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
-                          <span>
-                            {new Date(incident.timestamp).toLocaleString("es-ES")}
-                          </span>
+                          <span>{new Date(incident.timestamp).toLocaleString("es-ES")}</span>
                         </div>
                         <div className="text-sm text-slate-500">Barrio: {incident.barrio}</div>
                       </div>
                       <div className="flex gap-2 mt-4 pt-4 border-t border-slate-700/50">
                         <button
-                          className={`px-3 py-1.5 rounded text-sm font-medium ${
-                            incident.status === "pendiente"
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                          }`}
-                          onClick={() => updateIncidentStatus(incident.id, "pendiente")}
-                        >
-                          Pendiente
-                        </button>
-                        <button
-                          className={`px-3 py-1.5 rounded text-sm font-medium ${
-                            incident.status === "solucionado"
-                              ? "bg-green-600 text-white"
-                              : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                          }`}
-                          onClick={() => updateIncidentStatus(incident.id, "solucionado")}
+                          className="px-3 py-1.5 rounded text-sm font-medium bg-green-600 text-white hover:bg-green-700"
+                          onClick={() => removeIncident(incident.id)}
                         >
                           Solucionado
                         </button>
