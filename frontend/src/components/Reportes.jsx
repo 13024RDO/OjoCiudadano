@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -69,7 +68,10 @@ export default function Reportes() {
   };
 
   return (
-    <form onSubmit={subirForm} className="flex w-[95%] sm:w-[75%] md:w-[65%] lg:w-[50%] xl:w-[35%] flex-col gap-4 p-4">
+    <form
+      onSubmit={subirForm}
+      className="flex w-[95%] sm:w-[75%] md:w-[65%] lg:w-[50%] xl:w-[45%] flex-col gap-4 p-4"
+    >
       {/* Mostrar mensaje de éxito si existe */}
       {successMessage && (
         <div className="bg-green-100 w-[200px] absolute bottom-4 right-4  text-green-700 p-2 rounded text-center">
@@ -77,9 +79,13 @@ export default function Reportes() {
         </div>
       )}
 
-         <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         <label>Tipo de incidente:</label>
-        <select className="[&>option]:text-black w-[50%] py-1 px-4 border-2 rounded border-white " value={type} onChange={(e) => setType(e.target.value)}>
+        <select
+          className="[&>option]:text-black w-[50%] py-1 px-4 border-2 rounded border-white "
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+        >
           <option value="">Seleccionar tipo</option>
           <option value="robo">Robo</option>
           <option value="vandalismo">Vandalismo</option>
@@ -91,10 +97,10 @@ export default function Reportes() {
         </select>
       </div>
 
-       <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         <label>Descripción (opcional):</label>
         <input
-        className= "border-2 py-1 px-4 border-white rounded"
+          className="border-2 py-1 px-4 border-white rounded"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}

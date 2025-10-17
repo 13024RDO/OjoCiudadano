@@ -1,6 +1,7 @@
 import Header from "../components/Header";
 import Nav from "../components/Nav";
 import SeccionesNav from "../components/Secciones";
+import "@fontsource/poppins";
 
 export default function Inicio() {
   return (
