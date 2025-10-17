@@ -20,7 +20,11 @@ const incidentSchema = new Schema<IncidentData>(
     },
     barrio: { type: String, required: true },
     photoUrl: { type: String, default: null },
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now },
+    priority: {
+      type: String,
+      enum: [3, 2, 1]
+    }
   },
   { timestamps: false }
 );

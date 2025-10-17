@@ -33,6 +33,7 @@ export interface IncidentData {
   barrio: BarrioFormosa;
   photoUrl?: string | null;
   timestamp: Date;
+  priority?: 'Urgente' | 'Medio' | 'Bajo' | 'Analizando...';
 }
 
 // Respuesta de WebSocket
