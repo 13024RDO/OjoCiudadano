@@ -8,6 +8,7 @@ export default function SeccionesNav(){
     const {abiertoid } = useSecciones()
     return(
         <div className="bg-[#06040f] p-8 flex justify-center overflow-auto scrollbar-hide w-full h-full">
+            
             {abiertoid === "reportar" &&
                 <Reportes/>
             }   
@@ -21,9 +22,7 @@ export default function SeccionesNav(){
             {abiertoid === "mapa" &&
                <MapaColores/> 
             }   
-                  
-
-                   
+                             
             {abiertoid === "alertas" &&
                <MapaYAlertas/> 
             } 

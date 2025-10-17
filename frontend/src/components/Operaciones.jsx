@@ -6,14 +6,13 @@ import L from "leaflet";
 // Ícono personalizado para evitar errores
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 // Ícono por prioridad
-const getIconByPriority = (priority) => {
+const getIconByPriority = (priorityText) => {
   const icons = {
     Urgente:
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
@@ -24,7 +23,7 @@ const getIconByPriority = (priority) => {
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gray.png",
   };
   return new L.Icon({
-    iconUrl: icons[priority] || icons.Analizando,
+    iconUrl: icons[priorityText] || icons.Analizando,
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -33,11 +32,10 @@ const getIconByPriority = (priority) => {
 
 // Función para traducir prioridad
 const getPriorityInfo = (priority) => {
-  const p = String(priority);
-  if (p === "3" || p === "Urgente")
-    return { text: "Urgente", class: "Urgente" };
-  if (p === "2" || p === "Medio") return { text: "Medio", class: "Medio" };
-  if (p === "1" || p === "Bajo") return { text: "Bajo", class: "Bajo" };
+  const num = Number(priority);
+  if (num === 3) return { text: "Urgente", class: "Urgente" };
+  if (num === 2) return { text: "Medio", class: "Medio" };
+  if (num === 1) return { text: "Bajo", class: "Bajo" };
   return { text: "Analizando...", class: "Analizando" };
 };
 
@@ -55,31 +53,46 @@ export default function MapaYAlertas() {
       ws.onopen = () => setConnectionStatus("Conectado");
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+
         if (data.type === "new_incident") {
+          const incident = data.payload;
+          const id = incident._id || incident.id;
+          const normalizedIncident = { ...incident, id };
           setIncidents((prev) => ({
             ...prev,
-            [data.payload.id]: data.payload,
+            [id]: normalizedIncident,
           }));
         }
+
         if (data.type === "incident_priority_updated") {
           const { id, priority } = data.payload;
-          setIncidents((prev) => ({
-            ...prev,
-            [id]: { ...prev[id], priority },
-          }));
+          setIncidents((prev) => {
+            if (!prev[id]) return prev;
+            return {
+              ...prev,
+              [id]: { ...prev[id], priority },
+            };
+          });
         }
+
         if (data.type === "incident_status_updated") {
           const { id, status } = data.payload;
-          setIncidents((prev) => ({
-            ...prev,
-            [id]: { ...prev[id], status },
-          }));
+          setIncidents((prev) => {
+            if (!prev[id]) return prev;
+            return {
+              ...prev,
+              [id]: { ...prev[id], status },
+            };
+          });
         }
       };
       ws.onclose = () => {
         setConnectionStatus("Desconectado");
         setTimeout(connect, 3000);
       };
+      ws.onerror = () => {
+        ws.close();
+      }
     };
 
     connect();
@@ -102,23 +115,22 @@ export default function MapaYAlertas() {
   const incidentsArray = Object.values(incidents);
   const stats = {
     total: incidentsArray.length,
-    urgent: incidentsArray.filter(
-      (i) => getPriorityInfo(i.priority).text === "Urgente"
-    ).length,
-    medio: incidentsArray.filter(
-      (i) => getPriorityInfo(i.priority).text === "Medio"
-    ).length,
-    bajo: incidentsArray.filter(
-      (i) => getPriorityInfo(i.priority).text === "Bajo"
-    ).length,
+    urgent: incidentsArray.filter((i) => Number(i.priority) === 3).length,
+    medio: incidentsArray.filter((i) => Number(i.priority) === 2).length,
+    bajo: incidentsArray.filter((i) => Number(i.priority) === 1).length,
   };
 
-  // Ordenar incidentes
+  // Ordenar: 3 (Urgente) > 2 (Medio) > 1 (Bajo) > sin prioridad (Analizando)
+  // Dentro de cada grupo: más reciente primero
   const sortedIncidents = [...incidentsArray].sort((a, b) => {
-    const order = { Urgente: 1, Medio: 2, Bajo: 3, "Analizando...": 4 };
-    const prioA = order[getPriorityInfo(a.priority).text] || 99;
-    const prioB = order[getPriorityInfo(b.priority).text] || 99;
-    return prioA - prioB || new Date(b.timestamp) - new Date(a.timestamp);
+    const prioA = Number(a.priority) || 0; // 0 = sin prioridad → va al final
+    const prioB = Number(b.priority) || 0;
+
+    if (prioA !== prioB) {
+      return prioB - prioA; // 3 > 2 > 1 > 0
+    }
+    // Si misma prioridad, ordenar por timestamp (más reciente primero)
+    return new Date(b.timestamp) - new Date(a.timestamp);
   });
 
   return (
@@ -190,28 +202,28 @@ export default function MapaYAlertas() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {sortedIncidents.map((incident) => (
-                  <Marker
-                    key={incident.id}
-                    position={[
-                      incident.location.coordinates[1],
-                      incident.location.coordinates[0],
-                    ]}
-                    icon={getIconByPriority(
-                      getPriorityInfo(incident.priority).text
-                    )}
-                  >
-                    <Popup>
-                      <b>{incident.type.replace(/_/g, " ")}</b>
-                      <br />
-                      {incident.description || "Sin descripción"}
-                      <br />
-                      Barrio: {incident.barrio}
-                      <br />
-                      Prioridad: {getPriorityInfo(incident.priority).text}
-                    </Popup>
-                  </Marker>
-                ))}
+                {sortedIncidents
+                  .filter((incident) => incident?.location?.coordinates)
+                  .map((incident) => (
+                    <Marker
+                      key={incident.id}
+                      position={[
+                        incident.location.coordinates[1],
+                        incident.location.coordinates[0],
+                      ]}
+                      icon={getIconByPriority(getPriorityInfo(incident.priority).text)}
+                    >
+                      <Popup>
+                        <b>{(incident.type || "").replace(/_/g, " ")}</b>
+                        <br />
+                        {incident.description || "Sin descripción"}
+                        <br />
+                        Barrio: {incident.barrio}
+                        <br />
+                        Prioridad: {getPriorityInfo(incident.priority).text}
+                      </Popup>
+                    </Marker>
+                  ))}
               </MapContainer>
             </div>
           </div>
@@ -248,11 +260,11 @@ export default function MapaYAlertas() {
                       className={`rounded-lg p-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 transition-all hover:shadow-lg ${
                         solved ? "opacity-60" : ""
                       } border-l-4 ${
-                        priorityInfo.class === "Urgente"
+                        Number(incident.priority) === 3
                           ? "border-red-500"
-                          : priorityInfo.class === "Medio"
+                          : Number(incident.priority) === 2
                           ? "border-amber-500"
-                          : priorityInfo.class === "Bajo"
+                          : Number(incident.priority) === 1
                           ? "border-green-500"
                           : "border-gray-500"
                       }`}
@@ -261,11 +273,11 @@ export default function MapaYAlertas() {
                         <div>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                              priorityInfo.class === "Urgente"
+                              priorityInfo.text === "Urgente"
                                 ? "bg-red-900/30 text-red-400 border border-red-900/50"
-                                : priorityInfo.class === "Medio"
+                                : priorityInfo.text === "Medio"
                                 ? "bg-amber-900/30 text-amber-400 border border-amber-900/50"
-                                : priorityInfo.class === "Bajo"
+                                : priorityInfo.text === "Bajo"
                                 ? "bg-green-900/30 text-green-400 border border-green-900/50"
                                 : "bg-gray-900/30 text-gray-400 border border-gray-900/50"
                             }`}
@@ -273,7 +285,7 @@ export default function MapaYAlertas() {
                             {priorityInfo.text}
                           </span>
                           <h3 className="text-xl font-semibold text-white capitalize mt-2 mb-2">
-                            {incident.type.replace(/_/g, " ")}
+                            {(incident.type || "").replace(/_/g, " ")}
                           </h3>
                           <p className="text-slate-300">
                             {incident.description || "Sin descripción"}
@@ -296,14 +308,10 @@ export default function MapaYAlertas() {
                             />
                           </svg>
                           <span>
-                            {new Date(incident.timestamp).toLocaleString(
-                              "es-ES"
-                            )}
+                            {new Date(incident.timestamp).toLocaleString("es-ES")}
                           </span>
                         </div>
-                        <div className="text-sm text-slate-500">
-                          Barrio: {incident.barrio}
-                        </div>
+                        <div className="text-sm text-slate-500">Barrio: {incident.barrio}</div>
                       </div>
                       <div className="flex gap-2 mt-4 pt-4 border-t border-slate-700/50">
                         <button
@@ -312,9 +320,7 @@ export default function MapaYAlertas() {
                               ? "bg-blue-600 text-white"
                               : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                           }`}
-                          onClick={() =>
-                            updateIncidentStatus(incident.id, "pendiente")
-                          }
+                          onClick={() => updateIncidentStatus(incident.id, "pendiente")}
                         >
                           Pendiente
                         </button>
@@ -324,9 +330,7 @@ export default function MapaYAlertas() {
                               ? "bg-green-600 text-white"
                               : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                           }`}
-                          onClick={() =>
-                            updateIncidentStatus(incident.id, "solucionado")
-                          }
+                          onClick={() => updateIncidentStatus(incident.id, "solucionado")}
                         >
                           Solucionado
                         </button>
