@@ -1,15 +1,16 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Inicio } from "./Pages";
+import { Inicio, LoginPage, MapaDeCalor } from "./pages";
 
 const AppRouters = () => {
-    return(
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Inicio/>}/>
-               
-            </Routes>
-        </BrowserRouter>
-    )
-}
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Inicio />} />
+        <Route path="/mapacalor" element={<MapaDeCalor />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
-export default AppRouters
+export default AppRouters;

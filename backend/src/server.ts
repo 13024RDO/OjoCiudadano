@@ -6,6 +6,8 @@ import fileUpload from "express-fileupload";
 import { connectDB } from "./config/db";
 import incidentRoutes from "./routes/incidents";
 import statsRoutes from "./routes/stat";
+import operacionesRoutes from "./routes/operaciones";
+import router from "./routes/auth";
 import { setupWebSocket } from "./sockets/websocket";
 
 const app = express();
@@ -28,11 +30,42 @@ connectDB();
 // Rutas
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/operaciones", operacionesRoutes);
+app.use("/api/auth", router);
 
 // WebSocket
 setupWebSocket(server);
+// Simulación de estados de móviles cada 2 minutos
+setInterval(() => {
+  const moviles = (global as any).movilesEnTiempoReal as any[];
+  if (!moviles) return;
 
-const PORT = process.env.PORT || 5000;
+  let huboCambio = false;
+  moviles.forEach((movil: any) => {
+    if (movil.estado === "en_camino") {
+      movil.estado = "en_lugar";
+      huboCambio = true;
+    } else if (movil.estado === "en_lugar") {
+      movil.estado = "disponible";
+      huboCambio = true;
+    }
+  });
+
+  if (huboCambio && (global as any).wss) {
+    (global as any).wss.clients.forEach((client: any) => {
+      if (client.readyState === client.OPEN) {
+        client.send(
+          JSON.stringify({
+            type: "moviles_update",
+            payload: moviles,
+          })
+        );
+      }
+    });
+  }
+}, 120000);
+
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Backend corriendo en puerto ${PORT}`);
 });

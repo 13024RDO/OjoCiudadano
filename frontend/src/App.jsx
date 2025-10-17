@@ -1,10 +1,11 @@
-import './index.css'
-import AppRouters from './Routers/AppRouters'
+// src/App.jsx
+import React from "react";
+import Header from "./components/Header";
+import Nav from "./components/Nav";
+import AppRouters from "./Routers/AppRouters";
 
 function App() {
-  return(
-    <AppRouters/>
-  )
+  return <AppRouters/>;
 }
 
-export default App
+export default App;

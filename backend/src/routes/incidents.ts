@@ -4,6 +4,7 @@ import { getBarrioFromCoords } from "../utils/geoutils";
 import { uploadImage } from "../utils/cloudinary";
 import { requireAdmin } from "../middleware/role";
 import { UploadedFile } from "express-fileupload";
+import { asignarComisariaYMovil } from "../utils/asignacion";
 import axios from 'axios'; // --- NUEVO ---
 
 const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/triaje-incidente";
@@ -16,53 +17,92 @@ router.post("/", async (req: Request, res: Response) => {
   const files = req.files as { photo?: UploadedFile } | undefined;
 
   try {
-    const { type, description, lng, lat, priority } = req.body;
-    console.log(req.body);
-    
+    const { type, description } = req.body;
+    let { lng, lat } = req.body;
 
-    if (typeof lng !== "number" || typeof lat !== "number") {
+    // Parsear coordenadas (form-data las envía como strings)
+    lng = parseFloat(lng);
+    lat = parseFloat(lat);
+
+    if (isNaN(lng) || isNaN(lat)) {
       return res.status(400).json({ error: "Ubicación inválida" });
     }
 
-    const barrio = getBarrioFromCoords(lng, lat);
-    if (!barrio) {
-      return res
-        .status(400)
-        .json({ error: "Ubicación fuera de Formosa Capital" });
+    // ✅ Asignación automática de comisaría y móvil
+    const { comisaria, movil } = await asignarComisariaYMovil(lng, lat);
+
+    let photoUrl: string | null = null;
+    if (
+      files?.photo?.data &&
+      files.photo.data.length > 0 &&
+      tiposConFoto.includes(type)
+    ) {
+      photoUrl = await uploadImage(files.photo.data);
     }
 
-
-    
-
-    const incident = new Incident({
+    // ✅ Construir el objeto de incidente SIN campos nulos innecesarios
+    const incidentData: any = {
       type,
-      description,
+      description: description || undefined,
       location: { coordinates: [lng, lat] },
-      barrio,
-      priority// --- NUEVO --- Estado inicial
-    });
+      barrio: getBarrioFromCoords(lng, lat) || "Desconocido",
+      photoUrl: photoUrl || undefined,
+    };
 
-    await incident.save();
+    // Solo agregar comisariaAsignada si existe
+    if (comisaria?.nombre) {
+      incidentData.comisariaAsignada = comisaria.nombre;
+    }
 
-    // --- LÓGICA DE NOTIFICACIÓN EXISTENTE (se mantiene) ---
-    if (typeof (global as any).wss !== "undefined") {
-      const payload = {
-        type: "new_incident" as const,
-        payload: {
-          id: incident._id.toString(),
-          type: incident.type,
-          description: incident.description,
-          location: incident.location.coordinates,
-          barrio: incident.barrio,
-          photoUrl: incident.photoUrl,
-          timestamp: incident.timestamp,
-          priority: incident.priority, // Enviamos el estado inicial
-        },
+    // Solo agregar movilAsignado si existe
+    if (movil) {
+      incidentData.movilAsignado = {
+        id: movil._id.toString(),
+        patente: movil.patente,
+        estado: movil.estado,
       };
+    }
+
+    const incident = new Incident(incidentData);
+    await incident.save();
+    // Emitir actualización de mapa de calor
+    if ((global as any).wss) {
+      const statsBarrios = await Incident.aggregate([
+        {
+          $match: {
+            timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+          },
+        },
+        { $group: { _id: "$barrio", count: { $sum: 1 } } },
+      ]);
+
+      const barriosCalor: Record<string, number> = {};
+      statsBarrios.forEach((item) => {
+        barriosCalor[item._id] = item.count;
+      });
 
       (global as any).wss.clients.forEach((client: any) => {
         if (client.readyState === client.OPEN) {
-          client.send(JSON.stringify(payload));
+          client.send(
+            JSON.stringify({
+              type: "barrios_calor_update",
+              payload: barriosCalor,
+            })
+          );
+        }
+      });
+    }
+
+    // Emitir por WebSocket
+    if ((global as any).wss) {
+      (global as any).wss.clients.forEach((client: any) => {
+        if (client.readyState === client.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "new_incident",
+              payload: incident.toObject(),
+            })
+          );
         }
       });
     }
@@ -79,7 +119,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     return res.status(201).json({ success: true, id: incident._id.toString() });
   } catch (error) {
-    console.error(error);
+    console.error("Error al crear incidente:", error);
     return res.status(500).json({ error: "Error al crear incidente" });
   }
 });
@@ -140,6 +180,7 @@ router.get("/", requireAdmin, async (req, res) => {
       .select("-__v");
     return res.json(incidents);
   } catch (error) {
+    console.error("Error al obtener incidentes:", error);
     return res.status(500).json({ error: "Error al obtener incidentes" });
   }
 });
