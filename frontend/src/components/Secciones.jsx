@@ -3,7 +3,7 @@ import { useSecciones } from "../../context/SeccionContext";
 import MapaIncidentes from "./Mapa";
 import Reportes from "./Reportes";
 import DashboardSeguridad from "./Estadisticas";
-import OperacionesPage from "../Pages/OperacionesPage";
+import MapaYAlertas from "../Pages/OperacionesPage";
 
 export default function SeccionesNav() {
   const { abiertoid } = useSecciones();
@@ -16,7 +16,7 @@ export default function SeccionesNav() {
 
       {abiertoid === "estadistica" && <DashboardSeguridad />}
 
-      {abiertoid === "alertas" && <OperacionesPage />}
+      {abiertoid === "alertas" && <MapaYAlertas />}
     </div>
   );
 }
