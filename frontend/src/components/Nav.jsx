@@ -35,11 +35,14 @@ export default function Nav() {
           icono={GoAlertFill}
         />
       ) : null}
-      <Seccion
-        texto="Asignacion de Comisarias"
-        id={"asignacion"}
-        icono={MdReport}
-      />
+
+      {user && user.rol === "admin" ? (
+        <Seccion
+          texto="Asignacion de Comisarias"
+          id={"asignacion"}
+          icono={MdReport}
+        />
+      ) : null}
     </nav>
   );
 }

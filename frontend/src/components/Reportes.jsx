@@ -70,7 +70,7 @@ export default function Reportes() {
   return (
     <form
       onSubmit={subirForm}
-      className="flex w-[95%] sm:w-[75%] md:w-[65%] lg:w-[50%] xl:w-[35%] flex-col gap-4 p-4"
+      className="flex w-[95%] sm:w-[75%] md:w-[65%] lg:w-[50%] xl:w-[45%] flex-col gap-4 p-4"
     >
       {/* Mostrar mensaje de éxito si existe */}
       {successMessage && (
