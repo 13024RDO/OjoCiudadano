@@ -1,13 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Inicio, OperacionesPage, MapaDeCalor } from "./Pages";
+import { Inicio, LoginPage } from "./pages";
 
 const AppRouters = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Inicio />} />
-        <Route path="/operaciones" element={<OperacionesPage />} />
-        <Route path="/mapacalor" element={<MapaDeCalor />} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </BrowserRouter>
   );

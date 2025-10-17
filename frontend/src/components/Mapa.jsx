@@ -1,82 +1,79 @@
-import { MapContainer, TileLayer, Circle, Popup } from "react-leaflet";
-import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.heat";
+import { useEffect, useState } from "react";
 
-export default function MapaColores() {
+export default function MapaIncidentes() {
   const [barrios, setBarrios] = useState([]);
 
+  // 🔹 Obtener datos del backend
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/stats/summary");
+        const res = await fetch("http://localhost:3000/api/stats/summary");
         const data = await res.json();
-        console.log(data);
-        
         setBarrios(data.incidents_by_barrio || []);
       } catch (error) {
         console.error("Error al obtener los incidentes:", error);
       }
     };
+
     fetchDatos();
   }, []);
 
-  // Coordenadas de los barrios
-  const coordenadasBarrios = {
-    "San Miguel": [-26.1841, -58.1781],
-    "17 de Octubre": [-26.187, -58.156],
-    "Eva Perón": [-26.13818 , -58.15630],
-    "Villa del Carmen": [-26.198, -58.234],
-    "San Martín": [-26.166, -58.199],
-    "Don Bosco": [-26.184, -58.192],
-    "Mariano Moreno": [-26.191, -58.168],
-    "La Pilar": [-26.203, -58.216],
-    "Divino Niño": [-26.160, -58.207],
-    "Villa Hermosa": [-26.210, -58.184],
-    "Parque Urbano": [-26.175, -58.225],
-  };
-
-  // Función para definir color según cantidad
-  const obtenerColor = (cantidad) => {
-    if (cantidad > 10) return "red";      // 🔴 alto peligro
-    if (cantidad > 3) return "orange";    // 🟠 medio
-    return "green";                       // 🟢 bajo
-  };
-
   return (
-    <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-xl">
+    <div className="w-full h-[600px] rounded-2xl overflow-hidden shadow-xl">
       <MapContainer
-        center={[-26.185, -58.183]}
+        center={[-26.177, -58.178]} // Centro de Formosa
         zoom={13}
+        style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {barrios.map((barrio, index) => {
-          const coords = coordenadasBarrios[barrio._id];
-          if (!coords) return null;
-
-          return (
-            <Circle
-              key={index}
-              center={coords}
-              radius={400} // tamaño del área
-              pathOptions={{
-                color: obtenerColor(barrio.count),
-                fillColor: obtenerColor(barrio.count),
-                fillOpacity: 0.6,
-              }}
-            >
-              <Popup>
-                <b>{barrio._id}</b>
-                <br />
-                Incidentes: {barrio.count}
-              </Popup>
-            </Circle>
-          );
-        })}
+        {/* ✅ Ahora el componente con useMap() va adentro */}
+        <CapaCalor datos={barrios} />
       </MapContainer>
     </div>
   );
 }
+
+// 🔹 Este componente sí puede usar useMap()
+const CapaCalor = ({ datos }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!datos || datos.length === 0) return;
+
+    const coordenadasBarrios = {
+      "San Miguel": [-26.177, -58.178],
+      "17 de Octubre": [-26.18825, -58.1999],
+      "Eva Perón": [-26.13448, -58.15816],
+      "Villa del Carmen": [-26.18, -58.22],
+    };
+
+    const puntos = datos
+      .map((barrio) => {
+        const coords = coordenadasBarrios[barrio._id];
+        if (!coords) return null;
+        return [coords[0], coords[1], barrio.count];
+      })
+      .filter(Boolean);
+
+    const heat = window.L.heatLayer(puntos, {
+      radius: 30,
+      blur: 20,
+      maxZoom: 17,
+    });
+
+    heat.addTo(map);
+
+    return () => {
+      map.removeLayer(heat);
+    };
+  }, [datos, map]);
+
+  return null;
+};

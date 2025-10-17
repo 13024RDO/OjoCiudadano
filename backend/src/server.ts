@@ -7,6 +7,7 @@ import { connectDB } from "./config/db";
 import incidentRoutes from "./routes/incidents";
 import statsRoutes from "./routes/stat";
 import operacionesRoutes from "./routes/operaciones";
+import router from "./routes/auth";
 import { setupWebSocket } from "./sockets/websocket";
 
 const app = express();
@@ -30,6 +31,7 @@ connectDB();
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/operaciones", operacionesRoutes);
+app.use("/api/auth", router);
 
 // WebSocket
 setupWebSocket(server);
@@ -63,7 +65,7 @@ setInterval(() => {
   }
 }, 120000);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Backend corriendo en puerto ${PORT}`);
 });
