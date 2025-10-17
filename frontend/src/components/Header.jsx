@@ -14,6 +14,7 @@ export default function Header() {
   const user = getCurrentUser();
 
   return (
+
     <header className="bg-black text-white p-4 shadow-md">
       <div className=" flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -36,7 +37,6 @@ export default function Header() {
             className="border-2 border-white px-4 py-1 rounded"
             onClick={HandLogout}
           >
-            {" "}
             Cerrar sesión
           </button>
         ) : (

@@ -68,7 +68,10 @@ export default function Reportes() {
   };
 
   return (
-    <form onSubmit={subirForm} className="flex flex-col gap-4 p-4">
+    <form
+      onSubmit={subirForm}
+      className="flex w-[95%] sm:w-[75%] md:w-[65%] lg:w-[50%] xl:w-[35%] flex-col gap-4 p-4"
+    >
       {/* Mostrar mensaje de éxito si existe */}
       {successMessage && (
         <div className="bg-green-100 w-[200px] absolute bottom-4 right-4  text-green-700 p-2 rounded text-center">
@@ -76,34 +79,36 @@ export default function Reportes() {
         </div>
       )}
 
-      <div>
+      <div className="flex flex-col gap-2">
         <label>Tipo de incidente:</label>
-        <select value={type} onChange={(e) => setType(e.target.value)}>
+        <select
+          className="[&>option]:text-black w-[50%] py-1 px-4 border-2 rounded border-white "
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+        >
           <option value="">Seleccionar tipo</option>
-          <option value="robo_moto">Robo de moto</option>
-          <option value="robo_bici">Robo de bici</option>
-          <option value="robo_vehiculo">Robo de vehículo</option>
-          <option value="abandono_vehiculo">Abandono de vehículo</option>
-          <option value="daño_luminaria">Daño de luminaria</option>
+          <option value="robo">Robo</option>
+          <option value="vandalismo">Vandalismo</option>
           <option value="basura_acumulada">Basura acumulada</option>
-          <option value="sospechoso">Sospechoso</option>
-          <option value="riña">Pelea</option>
+          <option value="actividad_sospechosa">Actividad sospechosa</option>
+          <option value="pelea">Pelea</option>
           <option value="ruido_molestia">Ruido molesto</option>
           <option value="otros">Otros</option>
         </select>
       </div>
 
-      <div>
+      <div className="flex flex-col gap-2">
         <label>Descripción (opcional):</label>
         <input
+          className="border-2 py-1 px-4 border-white rounded"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
 
-      <div>
-        <label>Selecciona el punto en el mapa:</label>
+      <div className="flex flex-col gap-2">
+        <label>Selecciona ubicacion del incidente:</label>
         <MapContainer
           center={[-26.185, -58.173]}
           zoom={13}
@@ -116,9 +121,6 @@ export default function Reportes() {
           <MapaSelector setLat={setLat} setLng={setLng} />
           {lat && lng && <Marker position={[lat, lng]} icon={iconMarker} />}
         </MapContainer>
-        <p>
-          Latitud: {lat?.toFixed(5)} | Longitud: {lng?.toFixed(5)}
-        </p>
       </div>
 
       <button type="submit" className="bg-blue-500 text-white rounded p-2">

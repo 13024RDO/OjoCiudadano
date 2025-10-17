@@ -4,7 +4,7 @@ import SeccionesNav from "../components/Secciones";
 
 export default function Inicio() {
   return (
-    <div className="bg-black text-white grid grid-rows-[auto_auto_1fr] h-screen">
+    <div className="bg-black text-white overflow-auto scrollbar-hide grid grid-rows-[auto_auto_1fr] h-screen">
       <Header />
       <Nav />
       <div className="p-5">
