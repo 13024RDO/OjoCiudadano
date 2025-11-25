@@ -42,7 +42,7 @@ function DashboardSeguridad() {
   const colores = ["#60A5FA", "#F87171", "#34D399", "#FBBF24", "#A78BFA"];
 
   return (
-    <div className="bg-gray-900 text-white w-full  p-5 font-[Poppins] box-border">
+    <div className="bg-[#060314] text-white w-full  p-5 font-[Poppins] box-border">
       {/* Encabezado */}
       <div className="flex justify-between items-center mb-5">
         <h1 className="text-2xl font-bold">Panel de Seguridad Ciudadana</h1>
@@ -51,14 +51,14 @@ function DashboardSeguridad() {
 
       {/* Tarjetas de Resumen */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4 mb-5">
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+        <div className="border-2 border-gray-400 rounded-lg transform hover:scale-102 transition-all duration-300 p-4 shadow-md flex-1 min-w-[200px]">
           <div className="text-sm text-gray-400 mb-2">Total de Incidentes</div>
           <div className="text-4xl font-bold text-white">
             {stats.total_last_24h}
           </div>
         </div>
 
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+        <div className="border-2 border-gray-400 rounded-lg transform hover:scale-102 transition-all duration-300 p-4 shadow-md flex-1 min-w-[200px]">
           <div className="text-sm text-gray-400 mb-2">
             Barrio con Más Incidentes
           </div>
@@ -67,14 +67,14 @@ function DashboardSeguridad() {
           </div>
         </div>
 
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+        <div className="border-2 border-gray-400 rounded-lg transform hover:scale-102 transition-all duration-300 p-4 shadow-md flex-1 min-w-[200px]">
           <div className="text-sm text-gray-400 mb-2">Tipos de Incidentes</div>
           <div className="text-2xl font-bold text-blue-400">
             {stats.incidents_by_type.length}
           </div>
         </div>
 
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 shadow-md flex-1 min-w-[200px]">
+        <div className="border-2 border-gray-400 rounded-lg transform hover:scale-102 transition-all duration-300 p-4 shadow-md flex-1 min-w-[200px]">
           <div className="text-sm text-gray-400 mb-2">Barrios Reportados</div>
           <div className="text-2xl font-bold text-green-400">
             {stats.incidents_by_barrio.length}
@@ -82,7 +82,7 @@ function DashboardSeguridad() {
         </div>
       </div>
 
-      <div className="bg-[#1a1a1a] border justify-center border-[#333] rounded-lg p-5 shadow-md flex flex-wrap gap-10">
+      <div className="border-2 border-gray-400 justify-center transform hover:scale-101sss transition-all duration-300  rounded-lg p-5 shadow-md flex flex-wrap gap-10">
         {/* grafico torta */}
         <div className=" px-10">
           <h3 className="text-lg font-bold pl-10">
@@ -116,7 +116,7 @@ function DashboardSeguridad() {
                 layout="vertical"
                 verticalAlign="middle"
                 align="right"
-                spacing={20}
+                wrapperStyle={{ spacing: 20 }}
               />
             </PieChart>
           ) : (

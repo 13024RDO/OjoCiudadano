@@ -8,7 +8,7 @@ export default function Inicio() {
     <div className="bg-black text-white overflow-auto scrollbar-hide grid grid-rows-[auto_auto_1fr] h-screen">
       <Header />
       <Nav />
-      <div className="p-5">
+      <div className="p-5 pt-0">
         <SeccionesNav />
       </div>
     </div>

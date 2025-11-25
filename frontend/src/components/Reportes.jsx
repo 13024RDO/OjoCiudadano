@@ -98,7 +98,7 @@ export default function Reportes() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label>Descripción (opcional):</label>
+        <label>Descripción:</label>
         <input
           className="border-2 py-1 px-4 border-white rounded"
           type="text"

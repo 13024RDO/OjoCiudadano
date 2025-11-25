@@ -2,6 +2,9 @@ import { MapContainer, TileLayer, Circle, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState } from "react";
+import { LuTriangleAlert } from "react-icons/lu";
+import { CgDanger } from "react-icons/cg";
+import { AiOutlineSafety } from "react-icons/ai";
 
 // :small_blue_diamond: Solución para evitar error de íconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -71,7 +74,7 @@ export default function MapaIncidentes() {
   return (
     <div className="flex flex-wrap gap-6 w-full h-[430px]">
       {/* :map: Contenedor del mapa */}
-      <div className="md:w-[900px] w-full rounded-2xl overflow-hidden shadow-xl">
+      <div className="md:w-[900px] w-full h-full rounded-2xl overflow-hidden shadow-xl">
         <MapContainer
           center={[-26.177, -58.178]} // Centro de Formosa
           zoom={13}
@@ -116,9 +119,9 @@ export default function MapaIncidentes() {
       </div>
 
       {/* :bell: Panel de notificaciones */}
-      <div className="md:w-[500px] w-full h-[430px] overflow-auto scrollbar-hide bg-gray-900 text-white rounded-2xl shadow-xl p-4 flex flex-col">
+      <div className="md:w-[500px] w-full h-[430px] overflow-auto scrollbar-hide bg-[#060314] text-white rounded-2xl shadow-xl p-4 flex flex-col">
         <h2 className="text-lg font-bold mb-3 flex items-center">
-          <span className="mr-2">🔔</span> Alertas por Barrio
+          Alertas por Barrio
         </h2>
         <div className="flex-1 space-y-3">
           {barrios.length > 0 ? (
@@ -134,8 +137,14 @@ export default function MapaIncidentes() {
                 }`}
               >
                 <div className="flex items-start">
-                  <div className="mr-3 mt-0.5">
-                    {barrio.count >= 4 ? "🚨" : barrio.count >= 2 ? "⚠️" : "✅"}
+                  <div className="mr-3 mt-2">
+                    {barrio.count >= 4 ? (
+                      <LuTriangleAlert className="text-4xl" />
+                    ) : barrio.count >= 2 ? (
+                      <CgDanger className="text-4xl" />
+                    ) : (
+                      <AiOutlineSafety className="text-4xl" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-bold text-white">

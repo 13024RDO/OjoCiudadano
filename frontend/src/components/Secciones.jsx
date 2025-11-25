@@ -8,7 +8,7 @@ import AsignacionComisarias from "./AsignacionComisarias";
 export default function SeccionesNav() {
   const { abiertoid } = useSecciones();
   return (
-    <div className="bg-[#06040f] p-8 flex justify-center overflow-auto scrollbar-hide w-full h-full">
+    <div className="bg-[#0c081c] p-8 flex justify-center items-center overflow-auto scrollbar-hide w-full h-full">
       {abiertoid === "reportar" && <Reportes />}
 
       {abiertoid === "estadistica" && <DashboardSeguridad />}

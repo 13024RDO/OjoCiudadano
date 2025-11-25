@@ -4,31 +4,23 @@ import { getBarrioFromCoords } from "../utils/geoutils";
 import { uploadImage } from "../utils/cloudinary";
 import { requireAdmin } from "../middleware/role";
 import { UploadedFile } from "express-fileupload";
-import { asignarComisaria } from "../utils/asignacion"; // ← solo comisaría
+import { asignarComisaria } from "../utils/asignacion";
+import axios from 'axios'; // --- NUEVO ---
+
+const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/triaje-incidente";
 
 const router = Router();
 
-// ✅ Prioridades por tipo
-const prioridades: Record<string, number> = {
-  robo_moto: 3,
-  robo_bici: 3,
-  robo_vehiculo: 3,
-  sospechoso: 2,
-  riña: 2,
-  abandono_vehiculo: 2,
-  daño_luminaria: 1,
-  basura_acumulada: 1,
-  ruido_molestia: 1,
-  otros: 1,
-};
+
 
 router.post("/", async (req: Request, res: Response) => {
-  //const files = req.files as { photo?: UploadedFile } | undefined;
+  const files = req.files as { photo?: UploadedFile } | undefined;
 
   try {
     const { type, description } = req.body;
     let { lng, lat } = req.body;
 
+    // Parsear coordenadas (form-data las envía como strings)
     lng = parseFloat(lng);
     lat = parseFloat(lat);
 
@@ -36,50 +28,27 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Ubicación inválida" });
     }
 
-    const barrio = getBarrioFromCoords(lng, lat) || "Desconocido";
-    const priority = prioridades[type] || 1;
+    // ✅ Asignación automática de comisaría y móvil
+    const comisariaAsignada = await asignarComisaria(lng, lat);
 
-    // ✅ Datos base del incidente
+
+    // ✅ Construir el objeto de incidente SIN campos nulos innecesarios
     const incidentData: any = {
       type,
       description: description || undefined,
       location: { coordinates: [lng, lat] },
-      barrio,
-      //photoUrl: photoUrl || undefined,
-      priority, // ← prioridad numérica
-      status: "pendiente", // ← estado inicial
+      barrio: getBarrioFromCoords(lng, lat) || "Desconocido",
     };
 
-    // ✅ Asignar solo comisaría (sin móviles)
-    let comisaria = null;
-    try {
-      comisaria = await asignarComisaria(lng, lat);
-    } catch (err) {
-      console.warn("⚠️ Error al asignar comisaría:", err);
+    // Solo agregar comisariaAsignada si existe
+    if (comisariaAsignada?.nombre) {
+      incidentData.comisariaAsignada = comisariaAsignada.nombre;
     }
 
-    if (comisaria?.nombre) {
-      incidentData.comisariaAsignada = comisaria.nombre;
-    }
 
     const incident = new Incident(incidentData);
     await incident.save();
-
-    // ✅ Emitir por WebSocket
-    if ((global as any).wss) {
-      (global as any).wss.clients.forEach((client: any) => {
-        if (client.readyState === client.OPEN) {
-          client.send(
-            JSON.stringify({
-              type: "new_incident",
-              payload: incident.toObject(),
-            })
-          );
-        }
-      });
-    }
-
-    // ✅ Emitir actualización de mapa de calor
+    // Emitir actualización de mapa de calor
     if ((global as any).wss) {
       const statsBarrios = await Incident.aggregate([
         {
@@ -107,6 +76,30 @@ router.post("/", async (req: Request, res: Response) => {
       });
     }
 
+    // Emitir por WebSocket
+    if ((global as any).wss) {
+      (global as any).wss.clients.forEach((client: any) => {
+        if (client.readyState === client.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "new_incident",
+              payload: incident.toObject(),
+            })
+          );
+        }
+      });
+    }
+
+    // --- NUEVO: Enviar a n8n para análisis de IA ---
+    axios.post(N8N_WEBHOOK_URL, {
+        incidentId: incident._id.toString(),
+        description: incident.description,
+        type: incident.type,
+      }).catch(error => {
+          // No bloqueamos la respuesta al usuario si n8n falla
+          console.error('🔴 Error al contactar el webhook de n8n:', error.message);
+      });
+
     return res.status(201).json({ success: true, id: incident._id.toString() });
   } catch (error) {
     console.error("Error al crear incidente:", error);
@@ -118,6 +111,9 @@ router.post("/", async (req: Request, res: Response) => {
 // Esta ruta la llamará n8n cuando termine de analizar
 router.post("/update-priority", async (req: Request, res: Response) => {
   const { incidentId, priority, reason } = req.body;
+
+  
+  
 
   if (!incidentId || !priority) {
     return res.status(400).json({ error: "Faltan incidentId o priority" });
@@ -142,7 +138,7 @@ router.post("/update-priority", async (req: Request, res: Response) => {
         payload: {
           id: incidentId,
           priority: priority,
-          reason: reason || "Prioridad asignada por el sistema de IA.",
+          reason: reason || "Prioridad asignada por el sistema de IA."
         },
       };
 
@@ -153,19 +149,16 @@ router.post("/update-priority", async (req: Request, res: Response) => {
       });
     }
 
-    console.log(
-      `✅ Prioridad actualizada para ${incidentId} a "${priority}". Razón: ${reason}`
-    );
+    console.log(`✅ Prioridad actualizada para ${incidentId} a "${priority}". Razón: ${reason}`);
     res.sendStatus(200);
+
   } catch (error) {
-    console.error("🔴 Error al actualizar la prioridad:", error);
-    return res
-      .status(500)
-      .json({ error: "Error interno al actualizar la prioridad" });
+    console.error('🔴 Error al actualizar la prioridad:', error);
+    return res.status(500).json({ error: "Error interno al actualizar la prioridad" });
   }
 });
 
-router.get("/", requireAdmin, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const incidents = await Incident.find()
       .sort({ timestamp: -1 })

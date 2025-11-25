@@ -24,8 +24,7 @@ export default function MapaComisariasIncidentes({ comisarias, incidentes }) {
   }, {});
 
   return (
-    <div className="rounded-lg overflow-hidden shadow-lg h-[500px]">
-      <MapContainer
+        <div className="bg-[#060314]  text-white font-[Poppins]  rounded-lg shadow-md overflow-hidden transform hover:scale-[1.01] transition-all duration-300 h-[500px] flex flex-col">      <MapContainer
         center={[-26.185, -58.173]}
         zoom={13}
         style={{ height: "100%", width: "100%" }}
@@ -56,19 +55,26 @@ export default function MapaComisariasIncidentes({ comisarias, incidentes }) {
               fillOpacity={0.2}
               weight={2}
             >
-              <Popup>
-                <div className="text-center">
-                  <h3 className="font-bold text-blue-700">{comi.nombre}</h3>
-                  <p className="mt-1">
-                    <span className="font-semibold">Incidentes asignados:</span>{" "}
-                    {count}
-                  </p>
-                </div>
-              </Popup>
-            </Circle>
-          );
-        })}
-      </MapContainer>
-    </div>
+            <Popup
+                  className="bg-[#060314] border border-gray-600 rounded-lg shadow-lg p-2 min-w-[180px]"
+                  closeButton={true}
+                >
+                  <div className="text-center">
+                    <h3 className="font-bold text-blue-400 text-sm">
+                      {comi.nombre}
+                    </h3>
+                    <p className="mt-1 text-xs">
+                      <span className="font-semibold">
+                        Incidentes asignados:
+                      </span>{" "}
+                      <span className=" font-medium">{count}</span>
+                    </p>
+                  </div>
+                </Popup>
+              </Circle>
+            );
+          })}
+        </MapContainer>
+      </div>
   );
 }

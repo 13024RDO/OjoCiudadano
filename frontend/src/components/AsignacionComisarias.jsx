@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { LuNotebookText } from "react-icons/lu";
 import MapaComisariasIncidentes from "../components/MapaComisariasIncidentes";
 
 export default function AsignacionComisarias() {
@@ -52,27 +53,26 @@ export default function AsignacionComisarias() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <div className="bg[#060314] w-full text-white font-[Poppins] min-h-screen p-4">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-blue-800">
-          🚨 Asignación de Incidentes por Comisaría
+        <h1 className="text-2xl font-bold ">
+           Asignación de Incidentes por Comisaría
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-400">
           Visualización en tiempo real de la carga operativa
         </p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Mapa con círculos */}
-        <div className="bg-white rounded-xl shadow-lg p-4">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            🗺️ Mapa de Carga Operativa
-          </h2>
-          <MapaComisariasIncidentes
+        <div className="border-2 border-gray-400  rounded-lg shadow-md transform hover:scale-[1.01] transition-all duration-300 overflow-hidden">
+          <div className="h-[500px]">
+            <MapaComisariasIncidentes
             comisarias={comisarias}
             incidentes={incidentesRecientes}
           />
-          <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-600">
+          </div>
+          <div className="p-4 pt-2 flex items-center justify-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-green-400 rounded-full"></div>
               <span>Sin carga</span>
@@ -89,42 +89,45 @@ export default function AsignacionComisarias() {
         </div>
 
         {/* Lista de incidentes */}
-        <div className="bg-white rounded-xl shadow-lg p-4">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            📋 Incidentes Recientes
-          </h2>
-          {incidentesRecientes.length > 0 ? (
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+          <div className="border-2 border-gray-400 rounded-lg overflow-auto scrollbar-hide h-[550px] shadow-md transform hover:scale-[1.01] transition-all duration-300 p-4 flex flex-col">
+            <h2 className="text-xl text-white flex font-semibold gap-2 mb-4">
+              <LuNotebookText className="text-[30px]" />
+               Incidentes Recientes
+            </h2>
+         {incidentesRecientes.length > 0 ? (
+            <div className="space-y-4 max-h-[500px]  pr-2 flex-1">
               {incidentesRecientes.map((inc) => (
                 <div
                   key={inc._id}
-                  className="border-l-4 border-blue-500 bg-blue-50 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="border-2 border-gray-300 bg-[#0a0720] rounded-lg p-4 hover:shadow-lg transition-shadow"
                 >
-                  <h3 className="font-bold text-blue-800 capitalize">
-                    {inc.type?.replace(/_/g, " ")}
+                  <h3 className="font-bold text-2xl text-[#bdb8e3] capitalize">
+                    {inc.type?.replace(/_/g, " ") || "Sin tipo"}
                   </h3>
-                  <p className="text-gray-700 mt-1">
-                    <span className="font-semibold">Barrio:</span> {inc.barrio}
+                  <p className=" mt-1">
+                    <span className="font-semibold text-gray-400">Barrio:</span>{" "}
+                    {inc.barrio || "Desconocido"}
                   </p>
                   {inc.comisariaAsignada ? (
-                    <p className="text-blue-700 mt-2 flex items-center">
+                    <p className="text-blue-400 mt-2 flex items-center">
                       <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                      <span className="font-semibold">Asignado a:</span>{" "}
+                      <span className="font-semibold">Asignado a:</span>
                       {inc.comisariaAsignada}
                     </p>
                   ) : (
                     <p className="text-gray-500 mt-2 italic">Asignando...</p>
                   )}
                   {inc.description && (
-                    <p className="text-gray-600 mt-2 text-sm">
-                      "{inc.description}"
+                    <p className="text-gray-400 mt-2 text-sm">
+                      <span className="font-semibold">Descripcion: </span>
+                      {inc.description}
                     </p>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">
+            <p className="text-gray-500 text-center py-8 flex-1 flex items-center justify-center">
               No hay incidentes recientes
             </p>
           )}

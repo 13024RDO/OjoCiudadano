@@ -3,11 +3,12 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+
+
 // Ícono personalizado para evitar errores
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
@@ -19,8 +20,7 @@ const getIconByPriority = (priorityText) => {
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
     Medio:
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png",
-    Bajo:
-      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+    Bajo: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
     Analizando:
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gray.png",
   };
@@ -32,12 +32,12 @@ const getIconByPriority = (priorityText) => {
   });
 };
 
-// Función para traducir prioridad
 const getPriorityInfo = (priority) => {
-  const num = Number(priority);
-  if (num === 3) return { text: "Urgente", class: "Urgente" };
-  if (num === 2) return { text: "Medio", class: "Medio" };
-  if (num === 1) return { text: "Bajo", class: "Bajo" };
+  console.log("esta es la prioridad:", priority);
+  if (priority == "Urgente") return { text: "Urgente", class: "Urgente" };
+  if (priority == "Medio") return { text: "Medio", class: "Medio" };
+  if (priority == "Bajo") return { text: "Bajo", class: "Bajo" };
+
   return { text: "Analizando...", class: "Analizando" };
 };
 
@@ -46,37 +46,59 @@ export default function MapaYAlertas() {
   const [connectionStatus, setConnectionStatus] = useState("Desconectado");
   const wsRef = useRef(null);
 
+  const [refresh, setRefresh] = useState(0);
+
   // Conectar WebSocket
   useEffect(() => {
     const connect = () => {
       const ws = new WebSocket("ws://localhost:3000");
       wsRef.current = ws;
 
-      ws.onopen = () => setConnectionStatus("Conectado");
+      ws.onopen = () => {
+        console.log("✅ WebSocket conectado");
+        setConnectionStatus("Conectado");
+      };
+
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        console.log("📨 Mensaje WebSocket recibido:", data);
 
+        // 🔥 NUEVO INCIDENTE
         if (data.type === "new_incident") {
           const incident = data.payload;
           const id = incident._id || incident.id;
           const normalizedIncident = { ...incident, id };
+          console.log("📍 Nuevo incidente agregado:", id);
           setIncidents((prev) => ({
             ...prev,
             [id]: normalizedIncident,
           }));
         }
 
+        // 🔥 ACTUALIZACIÓN DE PRIORIDAD (CORREGIDO)
         if (data.type === "incident_priority_updated") {
-          const { id, priority } = data.payload;
+          const { id, priority, reason } = data.payload;
+          console.log("⚡ Prioridad actualizada recibida:", { id, priority, reason });
+
           setIncidents((prev) => {
-            if (!prev[id]) return prev;
+            if (!prev[id]) {
+              console.warn("⚠️ Incidente no encontrado en el estado:", id);
+              return prev;
+            }
+
+            console.log(`✅ Actualizando incidente ${id} con prioridad ${priority}`);
             return {
               ...prev,
-              [id]: { ...prev[id], priority },
+              [id]: {
+                ...prev[id],
+                priority: priority,
+                priorityReason: reason
+              },
             };
           });
         }
 
+        // ACTUALIZACIÓN DE ESTADO
         if (data.type === "incident_status_updated") {
           const { id, status } = data.payload;
           setIncidents((prev) => {
@@ -88,11 +110,15 @@ export default function MapaYAlertas() {
           });
         }
       };
+
       ws.onclose = () => {
+        console.log("🔌 WebSocket desconectado - Reintentando en 3s...");
         setConnectionStatus("Desconectado");
         setTimeout(connect, 3000);
       };
-      ws.onerror = () => {
+
+      ws.onerror = (error) => {
+        console.error("❌ Error WebSocket:", error);
         ws.close();
       };
     };
@@ -101,13 +127,35 @@ export default function MapaYAlertas() {
     return () => wsRef.current?.close();
   }, []);
 
-  // ✅ FUNCIÓN PARA ELIMINAR INCIDENTE DEL FRONTEND (sin tocar backend)
-  const removeIncident = (id) => {
-    setIncidents((prev) => {
-      const newState = { ...prev };
-      delete newState[id];
-      return newState;
-    });
+  useEffect(() => {
+    // Verificar si hay incidentes sin prioridad definida
+    const hasUndefinedPriority = Object.values(incidents).some(
+      (i) => i.priority === undefined
+    );
+
+    if (hasUndefinedPriority) {
+      // 🔁 Reintentar redibujar cada 1 segundo
+      const interval = setInterval(() => {
+        console.log("🔄 Forzando re-render mientras priority sea undefined...");
+        setRefresh((r) => r + 1);
+      }, 1000);
+
+      // Limpiar cuando todas las prioridades estén listas
+      return () => clearInterval(interval);
+    }
+  }, [incidents]);
+
+
+  // Enviar actualización de estado
+  const updateIncidentStatus = (id, status) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({
+          type: "update_status",
+          payload: { id, status },
+        })
+      );
+    }
   };
 
   // Calcular estadísticas
@@ -123,26 +171,45 @@ export default function MapaYAlertas() {
   const sortedIncidents = [...incidentsArray].sort((a, b) => {
     const prioA = Number(a.priority) || 0;
     const prioB = Number(b.priority) || 0;
-    if (prioA !== prioB) return prioB - prioA;
+
+    if (prioA !== prioB) {
+      return prioB - prioA;
+    }
     return new Date(b.timestamp) - new Date(a.timestamp);
   });
 
+  // Debug de prioridades
+  useEffect(() => {
+    const incidentList = Object.values(incidents);
+    incidentList.forEach((i) => {
+      if (i.priority !== undefined) {
+        console.log("🔍 Prioridad en estado:", i.id, i.priority);
+      }
+    });
+  }, [incidents, incidentsArray, sortedIncidents]);
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div key={refresh} className="min-h-screen bg-[#080525] text-slate-100 p-4">
+      <div className="max-w-7xl ">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-white">Centro de Control de Alertas</h1>
+            <h1 className="text-3xl font-bold text-white">
+              Centro de Control de Alertas
+            </h1>
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700">
               <div
-                className={`w-2 h-2 rounded-full ${connectionStatus === "Conectado" ? "bg-green-500" : "bg-red-500"
+                className={`w-2 h-2 rounded-full ${connectionStatus === "Conectado"
+                  ? "bg-green-500"
+                  : "bg-red-500"
                   } animate-pulse`}
               />
               <span className="text-sm text-slate-300">{connectionStatus}</span>
             </div>
           </div>
-          <p className="text-slate-400">Monitoreo en tiempo real de incidentes del sistema</p>
+          <p className="text-slate-400">
+            Monitoreo en tiempo real de incidentes del sistema
+          </p>
         </div>
 
         {/* Stats */}
@@ -198,18 +265,35 @@ export default function MapaYAlertas() {
                         incident.location.coordinates[1],
                         incident.location.coordinates[0],
                       ]}
-                      icon={getIconByPriority(
-                        getPriorityInfo(incident.priority).text
-                      )}
+                      icon={getIconByPriority(getPriorityInfo(incident.priority).text)}
                     >
                       <Popup>
-                        <b>{(incident.type || "").replace(/_/g, " ")}</b>
-                        <br />
-                        {incident.description || "Sin descripción"}
-                        <br />
-                        Barrio: {incident.barrio}
-                        <br />
-                        Prioridad: {getPriorityInfo(incident.priority).text}
+                        <div className="text-sm">
+                          <b>{(incident.type || "").replace(/_/g, " ")}</b>
+                          <br />
+                          {incident.description || "Sin descripción"}
+                          <br />
+                          <span className="text-gray-600">Barrio: {incident.barrio}</span>
+                          <br />
+                          <span className={`font-semibold ${getPriorityInfo(incident.priority).text === "Urgente"
+                            ? "text-red-600"
+                            : getPriorityInfo(incident.priority).text === "Medio"
+                              ? "text-orange-600"
+                              : getPriorityInfo(incident.priority).text === "Bajo"
+                                ? "text-green-600"
+                                : "text-gray-600"
+                            }`}>
+                            Prioridad: {getPriorityInfo(incident.priority).text}
+                          </span>
+                          {incident.priorityReason && (
+                            <>
+                              <br />
+                              <span className="text-xs italic text-gray-500">
+                                💡 {incident.priorityReason}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </Popup>
                     </Marker>
                   ))}
@@ -242,10 +326,12 @@ export default function MapaYAlertas() {
               <div className="space-y-4">
                 {sortedIncidents.map((incident) => {
                   const priorityInfo = getPriorityInfo(incident.priority);
+                  const solved = incident.status === "solucionado";
                   return (
                     <div
                       key={incident.id}
-                      className={`rounded-lg p-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 transition-all hover:shadow-lg border-l-4 ${Number(incident.priority) === 3
+                      className={`rounded-lg p-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 transition-all hover:shadow-lg ${solved ? "opacity-60" : ""
+                        } border-l-4 ${Number(incident.priority) === 3
                           ? "border-red-500"
                           : Number(incident.priority) === 2
                             ? "border-amber-500"
@@ -258,15 +344,15 @@ export default function MapaYAlertas() {
                         <div>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${priorityInfo.text === "Urgente"
-                                ? "bg-red-900/30 text-red-400 border border-red-900/50"
-                                : priorityInfo.text === "Medio"
-                                  ? "bg-amber-900/30 text-amber-400 border border-amber-900/50"
-                                  : priorityInfo.text === "Bajo"
-                                    ? "bg-green-900/30 text-green-400 border border-green-900/50"
-                                    : "bg-gray-900/30 text-gray-400 border border-gray-900/50"
+                              ? "bg-red-900/30 text-red-400 border border-red-900/50"
+                              : priorityInfo.text === "Medio"
+                                ? "bg-amber-900/30 text-amber-400 border border-amber-900/50"
+                                : priorityInfo.text === "Bajo"
+                                  ? "bg-green-900/30 text-green-400 border border-green-900/50"
+                                  : "bg-gray-900/30 text-gray-400 border border-gray-900/50"
                               }`}
                           >
-                            Prioridad: {priorityInfo.text}
+                            {priorityInfo.text}
                           </span>
                           <h3 className="text-xl font-semibold text-white capitalize mt-2 mb-2">
                             {(incident.type || "").replace(/_/g, " ")}
@@ -274,6 +360,12 @@ export default function MapaYAlertas() {
                           <p className="text-slate-300">
                             {incident.description || "Sin descripción"}
                           </p>
+                          {/* 🔥 MOSTRAR RAZÓN DE LA IA */}
+                          {incident.priorityReason && (
+                            <p className="text-slate-400 text-sm italic mt-2 bg-slate-700/30 p-2 rounded">
+                              💡 {incident.priorityReason}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between pt-4 border-t border-slate-700/50">
@@ -292,9 +384,7 @@ export default function MapaYAlertas() {
                             />
                           </svg>
                           <span>
-                            {new Date(incident.timestamp).toLocaleString(
-                              "es-ES"
-                            )}
+                            {new Date(incident.timestamp).toLocaleString("es-ES")}
                           </span>
                         </div>
                         <div className="text-sm text-slate-500">
@@ -303,11 +393,21 @@ export default function MapaYAlertas() {
                       </div>
                       <div className="flex gap-2 mt-4 pt-4 border-t border-slate-700/50">
                         <button
-                          className={`px-3 py-1.5 rounded text-sm font-medium ${
-                            incident.status === "solucionado"
-                              ? "bg-green-600 text-white"
-                              : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                          }`}
+                          className={`px-3 py-1.5 rounded text-sm font-medium ${incident.status === "pendiente"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                            }`}
+                          onClick={() =>
+                            updateIncidentStatus(incident.id, "pendiente")
+                          }
+                        >
+                          Pendiente
+                        </button>
+                        <button
+                          className={`px-3 py-1.5 rounded text-sm font-medium ${incident.status === "solucionado"
+                            ? "bg-green-600 text-white"
+                            : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                            }`}
                           onClick={() =>
                             updateIncidentStatus(incident.id, "solucionado")
                           }
